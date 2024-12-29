@@ -1,0 +1,8 @@
+[workspace]
+resolver = "2"
+members = ["functo-rs", "qualified_do"]
+
+[workspace.dependencies]
+syn = "2.0.91"
+proc-macro2 = "1.0.92"
+quote = "1.0.37"

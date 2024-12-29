@@ -8,7 +8,7 @@ pub trait Functor {
 
     fn fmap<A, B, F>(f: F, fa: Self::Container<A>) -> Self::Container<B>
     where
-        F: FnMut(A) -> B;
+        F: Fn(A) -> B;
 }
 
 impl Functor for Identity {
@@ -169,5 +169,18 @@ impl Apply for ZipVec {
             .zip(fb.into_iter())
             .map(|(a, b)| f(a, b))
             .collect()
+    }
+}
+
+impl Apply for V2 {
+    fn zip_with<A, B, C, F, G>(
+        mut f: F,
+        fa: Self::Container<A>,
+        fb: Self::Container<B>,
+    ) -> Self::Container<C>
+    where
+        F: FnMut(A, B) -> C,
+    {
+        (f(fa.0, fb.0), f(fa.1, fb.1))
     }
 }

@@ -8,3 +8,5 @@ pub mod impls;
 pub mod control;
 
 pub mod data;
+
+pub mod nonlinear;

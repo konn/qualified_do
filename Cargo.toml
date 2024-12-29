@@ -6,3 +6,6 @@ members = ["functo-rs", "qualified_do"]
 syn = "2.0.91"
 proc-macro2 = "1.0.92"
 quote = "1.0.37"
+proptest = "1.6.0"
+functo-rs = { path = "functo-rs" }
+qualified_do = { path = "qualified_do" }

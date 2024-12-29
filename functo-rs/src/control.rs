@@ -36,7 +36,7 @@ impl<E> Functor for ResultFunctor<E> {
     }
 }
 
-pub trait Pointed: data::Pointed {
+pub trait Pointed: Functor + data::Pointed {
     fn pure<A>(a: A) -> Self::Container<A>;
 }
 
@@ -58,7 +58,7 @@ impl<E> Pointed for ResultFunctor<E> {
     }
 }
 
-pub trait Apply: data::Apply {
+pub trait Apply: Functor + data::Apply {
     fn zip_with<A, B, C, F>(
         f: F,
         fa: Self::Container<A>,
@@ -100,5 +100,38 @@ impl<E> Apply for ResultFunctor<E> {
         F: FnOnce(A, B) -> C,
     {
         fa.and_then(|a| fb.map(|b| f(a, b)))
+    }
+}
+
+pub trait Monad: Apply + Pointed {
+    fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
+    where
+        F: FnOnce(A) -> Self::Container<B>;
+}
+
+impl Monad for Identity {
+    fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
+    where
+        F: FnOnce(A) -> Self::Container<B>,
+    {
+        f(fa)
+    }
+}
+
+impl Monad for OptionFunctor {
+    fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
+    where
+        F: FnOnce(A) -> Self::Container<B>,
+    {
+        fa.and_then(f)
+    }
+}
+
+impl<E> Monad for ResultFunctor<E> {
+    fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
+    where
+        F: FnOnce(A) -> Self::Container<B>,
+    {
+        fa.and_then(f)
     }
 }

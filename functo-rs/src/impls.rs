@@ -1,5 +1,7 @@
 //! Various implementations of functors.
 
+use std::marker::PhantomData;
+
 pub enum Identity {}
 
 pub enum UndetVec {}
@@ -9,11 +11,15 @@ pub enum ZipVec {}
 pub enum OptionFunctor {}
 
 pub struct ResultFunctor<E> {
-    phantom: std::marker::PhantomData<E>,
+    phantom: PhantomData<E>,
 }
 
 pub enum V2 {}
 
-pub struct Reader<E> {
-    pub env: E,
+pub struct Reader<R> {
+    pub env: PhantomData<R>,
+}
+
+pub struct State<S> {
+    pub env: PhantomData<S>,
 }

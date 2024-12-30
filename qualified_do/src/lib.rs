@@ -8,3 +8,6 @@ pub use functo_rs::control::AsControl;
 pub use functo_rs::data::AsData;
 pub use functo_rs::impls::*;
 pub use functo_rs::nonlinear::AsNonlinear;
+
+pub type Optioned = AsControl<OptionFunctor>;
+pub type Resulted<E> = AsControl<ResultFunctor<E>>;

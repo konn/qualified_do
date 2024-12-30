@@ -4,6 +4,7 @@ fn main() {
 
     let _ = qdo! {AsData::<ZipVec> {
         x <- vec![1,2,3];
-        return x
+        y <- vec![4,5,6];
+        return x + y
     }};
 }

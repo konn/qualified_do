@@ -89,8 +89,9 @@ impl Proptest {
 mod tests {
     use super::*;
 
+    #[allow(dead_code)]
     #[derive(Debug)]
-    enum Expr {
+    pub enum Expr {
         Add(Box<Expr>, Box<Expr>),
         Mul(Box<Expr>, Box<Expr>),
         Num(i32),

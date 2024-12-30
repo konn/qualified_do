@@ -7,7 +7,7 @@ fn list_rs<P: AsRef<Path>>(p: P) -> Vec<std::fs::DirEntry> {
             a.ok().and_then(|e| {
                 e.path()
                     .extension()
-                    .and_then(|ext| (ext == "rs").then(|| e))
+                    .and_then(|ext| (ext == "rs").then_some(e))
             })
         })
         .collect::<Vec<_>>();

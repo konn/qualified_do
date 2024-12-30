@@ -9,7 +9,6 @@ fn tests() {
     let mut successes = successes
         .read_dir()
         .unwrap()
-        .into_iter()
         .collect::<Result<Vec<_>, _>>()
         .unwrap();
     successes.sort_by_key(|a| a.file_name());
@@ -21,7 +20,6 @@ fn tests() {
     let mut failures = failures
         .read_dir()
         .unwrap()
-        .into_iter()
         .collect::<Result<Vec<_>, _>>()
         .unwrap();
     failures.sort_by_key(|a| a.file_name());

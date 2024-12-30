@@ -91,10 +91,11 @@ impl QDo {
                     return None;
                 }
                 // TODO: Supprot `#[infalliable]` attribute
-                let binder = stmt.binder().cloned().and_then(|x| match x {
-                    syn::Pat::Ident(pident) => Some(pident),
-                    _ => unreachable!(),
-                });
+                let binder = match stmt.binder().cloned() {
+                    Some(syn::Pat::Ident(pident)) => Some(Some(pident)),
+                    Some(_) => None,
+                    None => Some(None),
+                }?;
                 let scrutinee = match stmt {
                     Let(types::Let { expr, .. }) => Scrutinee::Let(expr),
                     Bind(types::Bind { body, .. }) => Scrutinee::Bind(body),

@@ -6,17 +6,23 @@ use std::collections::{HashSet, VecDeque};
 use syn::{parse_quote, visit::*, ExprPath};
 use syn::{Error, Pat};
 
-fn mk_bind_cont(namespace: Namespace, p: Pat, body: TokenStream) -> TokenStream {
+fn mk_bind_cont(namespace: Namespace, counter: &mut u64, p: Pat, body: TokenStream) -> TokenStream {
     if let Pat::Ident(ident) = p {
         return quote! { |#ident| #body };
     }
     let err = format!("Pattern match failed:\n  expected: {}", p.to_token_stream());
-    quote! { |v|
-        match v {
+    let var = fresh_var(counter);
+    quote! { move |#var|
+        match #var {
             #p => #body,
             _ => #namespace::fail(#err),
         }
     }
+}
+
+fn fresh_var(counter: &mut u64) -> syn::Ident {
+    *counter += 1;
+    Ident::new(&format!("__qdo_arg_{}", counter), Span::call_site())
 }
 
 impl QDo {
@@ -37,6 +43,8 @@ impl QDo {
 
         let pure = quote! { #namespace::pure };
         let and_then = quote! { #namespace::and_then };
+        let counter = &mut 0;
+
         let last = if trailing_semi {
             quote! { #pure(()) }
         } else {
@@ -60,10 +68,8 @@ impl QDo {
                     Ok(quote! { #and_then(#pure(#expr), |_| #acc) })
                 }
                 DoStatement::Let(Let { pat, expr, .. }) => Ok(quote! { {let #pat = #expr; #acc} }),
-                DoStatement::Bind(Bind {
-                    pat: bindee, body, ..
-                }) => {
-                    let closure = mk_bind_cont(namespace.clone(), bindee, acc);
+                DoStatement::Bind(Bind { pat, body, .. }) => {
+                    let closure = mk_bind_cont(namespace.clone(), counter, pat, acc);
                     Ok(quote! {
                         #and_then(#body, #closure)
                     })

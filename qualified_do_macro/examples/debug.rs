@@ -5,12 +5,17 @@ fn main() {
     let is = vec![Left(1), Right(2), Left(3)];
     let js = vec![Some(4), Some(5), None];
 
-    let ans: Vec<i64> = qdo! {UndetVec {
-        Right(i) <- is.clone();
-        Some(j) <- js.clone();
-        let k = 100i64;
-        return i + j + k
-    }};
+    let ans: Vec<i64> = {
+        let is = is.clone();
+        let js = js.clone();
+        qdo! {UndetVec {
+                Right(i) <- is.clone();
+                Some(j) <- js.clone();
+                let k = 100i64;
+                return i + j + k
+            }
+        }
+    };
     assert_eq!(
         ans,
         is.into_iter()

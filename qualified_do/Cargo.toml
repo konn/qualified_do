@@ -6,3 +6,6 @@ edition = "2021"
 [dependencies]
 qualified_do_macro.workspace = true
 functo_rs.workspace = true
+
+[dev-dependencies]
+either.workspace = true

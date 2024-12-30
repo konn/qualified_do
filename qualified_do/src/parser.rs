@@ -50,7 +50,7 @@ impl Parse for Bind {
 
 impl Parse for QDo {
     fn parse(input: ParseStream) -> Result<Self> {
-        let namespace = input.parse::<Path>()?;
+        let namespace = input.parse()?;
         let content;
         braced!(content in input);
         let statements = Punctuated::<DoStatement, Token![;]>::parse_terminated(&content)?;

@@ -3,7 +3,13 @@ resolver = "2"
 members = ["functo-rs", "qualified_do"]
 
 [workspace.dependencies]
-syn = { version = "2.0.91", features = ["full", "visit", "visit-mut", "fold"] }
+syn = { version = "2.0.91", features = [
+  "full",
+  "visit",
+  "visit-mut",
+  "fold",
+  "extra-traits",
+] }
 proc-macro2 = "1.0.92"
 quote = "1.0.37"
 proptest = "1.6.0"

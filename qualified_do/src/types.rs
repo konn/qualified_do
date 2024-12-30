@@ -1,6 +1,6 @@
 use proc_macro2::TokenStream;
 use quote::ToTokens;
-use syn::{Expr, Pat, Path, Token};
+use syn::{Expr, ExprPath, Pat, Token};
 
 pub enum DoStatement {
     Return(Return),
@@ -63,7 +63,7 @@ impl ToTokens for Bind {
 }
 
 pub struct QDo {
-    pub namespace: Path,
+    pub namespace: ExprPath,
     pub statements: Vec<DoStatement>,
     pub trailing_semi: bool,
 }

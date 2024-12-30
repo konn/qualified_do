@@ -3,8 +3,8 @@ use super::types::*;
 use proc_macro2::*;
 use quote::{quote, ToTokens};
 use std::collections::{HashSet, VecDeque};
+use syn::Error;
 use syn::{parse_quote, visit::*, ExprPath};
-use syn::{Error, PatIdent};
 
 impl QDo {
     // TODO: Support for MonadFail
@@ -90,18 +90,20 @@ impl QDo {
                 if call_visitor.0.intersection(&bound).next().is_some() {
                     return None;
                 }
-                let binder = stmt.binder().cloned();
+                // TODO: Supprot `#[infalliable]` attribute
+                let binder = stmt.binder().cloned().and_then(|x| match x {
+                    syn::Pat::Ident(pident) => Some(pident),
+                    _ => unreachable!(),
+                });
                 let scrutinee = match stmt {
                     Let(types::Let { expr, .. }) => Scrutinee::Let(expr),
                     Bind(types::Bind { body, .. }) => Scrutinee::Bind(body),
                     Expr(expr) => Scrutinee::Let(expr),
                     Return(types::Return { expr, .. }) => Scrutinee::Ret(expr),
                 };
-                let mut pat_visitor = PatVarWalker::default();
-                let pat = if let Some(pat) = binder {
-                    pat_visitor.visit_pat(&pat);
-                    bound.extend(pat_visitor.0);
-                    pat.clone()
+                let pat: syn::Pat = if let Some(pident) = binder {
+                    bound.insert(pident.ident.clone());
+                    syn::Pat::Ident(pident)
                 } else {
                     parse_quote! { _ }
                 };
@@ -128,14 +130,6 @@ impl QDo {
         } else {
             None
         }
-    }
-}
-
-#[derive(Default)]
-struct PatVarWalker(HashSet<Ident>);
-impl Visit<'_> for PatVarWalker {
-    fn visit_pat_ident(&mut self, node: &PatIdent) {
-        self.0.insert(node.ident.clone());
     }
 }
 

@@ -1,6 +1,6 @@
 fn main() {
     use functo_rs::nonlinear::*;
-    use qualified_do::qdo;
+    use qualified_do_macro::qdo;
     let is = vec![1, 2, 3];
     let js = vec![4, 5, 6];
 

@@ -1,6 +1,6 @@
 fn main() {
     use functo_rs::control::*;
-    use qualified_do::qdo;
+    use qualified_do_macro::qdo;
 
     let ans: Option<i64> = qdo! {OptionFunctor {
         i <- Some(5);

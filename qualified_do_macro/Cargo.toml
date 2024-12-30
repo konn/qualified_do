@@ -1,0 +1,21 @@
+[package]
+name = "qualified_do_macro"
+autotests = false
+version = "0.1.0"
+edition = "2021"
+
+[lib]
+proc-macro = true
+
+[[test]]
+name = "tests"
+path = "tests/trybuild.rs"
+
+[dev-dependencies]
+trybuild.workspace = true
+functo_rs.workspace = true
+
+[dependencies]
+syn.workspace = true
+proc-macro2.workspace = true
+quote.workspace = true

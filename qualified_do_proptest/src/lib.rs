@@ -40,6 +40,12 @@ impl BoxedProptest {
     {
         fa.prop_flat_map(f).boxed()
     }
+
+    pub fn fail<T: Clone + Debug + 'static>(msg: &str) -> BoxedStrategy<T> {
+        Just(Option::<T>::None)
+            .prop_filter_map(msg.to_string(), |i| i)
+            .boxed()
+    }
 }
 
 type Mapped<S, T, A, B, C> = strategy::Map<(S, T), Box<dyn Fn((A, B)) -> C + 'static>>;
@@ -49,10 +55,10 @@ pub enum Proptest {}
 impl Proptest {
     pub fn fmap<A, B, S, F>(f: F, fa: S) -> strategy::Map<S, F>
     where
-        S: Strategy<Value = A> + 'static,
-        A: Debug + 'static,
+        S: Strategy<Value = A>,
+        A: Debug,
         B: Debug,
-        F: Fn(A) -> B + 'static,
+        F: Fn(A) -> B,
     {
         fa.prop_map(f)
     }
@@ -63,11 +69,11 @@ impl Proptest {
 
     pub fn zip_with<A, B, C, S, T, F>(f: F, fa: S, fb: T) -> Mapped<S, T, A, B, C>
     where
-        A: Debug + 'static,
-        B: Debug + 'static,
+        A: Debug,
+        B: Debug,
         C: Debug,
-        S: Strategy<Value = A> + 'static,
-        T: Strategy<Value = B> + 'static,
+        S: Strategy<Value = A>,
+        T: Strategy<Value = B>,
         F: Fn(A, B) -> C + 'static,
     {
         (fa, fb).prop_map(Box::new(move |(a, b)| f(a, b)))
@@ -77,11 +83,15 @@ impl Proptest {
     where
         A: Debug + 'static,
         B: Debug,
-        S: Strategy<Value = A> + 'static,
-        T: Strategy<Value = B> + 'static,
-        F: Fn(A) -> T + 'static,
+        S: Strategy<Value = A>,
+        T: Strategy<Value = B>,
+        F: Fn(A) -> T,
     {
         fa.prop_flat_map(f)
+    }
+
+    pub fn fail<T: Clone + Debug>(msg: &str) -> impl Strategy<Value = T> {
+        Just(Option::<T>::None).prop_filter_map(msg.to_string(), |i| i)
     }
 }
 

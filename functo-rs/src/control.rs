@@ -1,7 +1,7 @@
 //! Control functors are special case of [data functors][`crate::data`], which can take [`FnOnce`] as continuations.
 
 use crate::data;
-use crate::impls::*;
+pub use crate::impls::*;
 
 /// A type-level label to force qualified_do to use `control::Functor`-hierarchy.
 pub struct AsControl<F>(std::marker::PhantomData<F>);

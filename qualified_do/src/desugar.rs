@@ -1,7 +1,8 @@
+use super::types;
 use super::types::*;
 use proc_macro2::*;
 use quote::{quote, ToTokens};
-use std::collections::HashSet;
+use std::collections::{HashSet, VecDeque};
 use syn::{parse_quote, visit::*, ExprPath};
 use syn::{Error, PatIdent};
 
@@ -58,43 +59,72 @@ impl QDo {
 
     pub fn desugar_applicative(self) -> Option<TokenStream> {
         use DoStatement::*;
+        let mut statements = self.statements.clone();
+        enum Scrutinee {
+            Let(syn::Expr),
+            Bind(syn::Expr),
+            Ret(syn::Expr),
+        }
+        let last = if self.trailing_semi {
+            Some(Return(parse_quote! {return ()}))
+        } else {
+            statements.pop()
+        };
 
-        if let Some(Return(ret)) = self.statements.last() {
+        if let Some(Return(ret)) = last {
             // TODO: resolve duplicate binding collectly.
-            let n = self.statements.len();
             let namespace = self.namespace;
-            let mut bound = HashSet::<Ident>::with_capacity(n);
-            let mut scrutinees = vec![];
+            let mut bound = HashSet::<Ident>::with_capacity(statements.len());
+            let mut scrutinees = VecDeque::new();
             let fmap = quote! { #namespace::fmap };
-            let pure = quote! { #namespace::pure };
-            let zip = |x: TokenStream, y: syn::Expr| quote! { #namespace::zip_with(|(a, b)| (a, b), #x, #y) };
-            for stmt in self.statements.iter().fuse() {
+            let zip = |x: TokenStream, y: Scrutinee| {
+                use Scrutinee::*;
+                match y {
+                    Bind(y) => quote! { #namespace::zip_with(|a, b| (a, b), #x, #y) },
+                    Let(y) => quote! { #namespace::fmap(|a| { let b = #y; (a, b) }, #x) },
+                    Ret(y) => quote! { #namespace::fmap(|a| { let b = #y; (a, b)}, #x) },
+                }
+            };
+            for stmt in statements {
                 let mut call_visitor = ExprVarWalker::default();
                 call_visitor.visit_expr(stmt.body());
                 if call_visitor.0.intersection(&bound).next().is_some() {
                     return None;
                 }
-                let scrutinee = stmt.body().clone();
+                let binder = stmt.binder().cloned();
+                let scrutinee = match stmt {
+                    Let(types::Let { expr, .. }) => Scrutinee::Let(expr),
+                    Bind(types::Bind { body, .. }) => Scrutinee::Bind(body),
+                    Expr(expr) => Scrutinee::Let(expr),
+                    Return(types::Return { expr, .. }) => Scrutinee::Ret(expr),
+                };
                 let mut pat_visitor = PatVarWalker::default();
-                let pat = if let Some(pat) = stmt.binder() {
-                    pat_visitor.visit_pat(pat);
+                let pat = if let Some(pat) = binder {
+                    pat_visitor.visit_pat(&pat);
                     bound.extend(pat_visitor.0);
                     pat.clone()
                 } else {
                     parse_quote! { _ }
                 };
-                scrutinees.push((scrutinee, pat));
+                scrutinees.push_back((scrutinee, pat));
             }
-            if let Some((scrut0, pat0)) = scrutinees.pop() {
+            if let Some((scrut0, pat0)) = scrutinees.pop_front() {
                 let (scrutinees, pats): (Vec<_>, Vec<_>) = scrutinees.into_iter().unzip();
-                let body = scrutinees.into_iter().fold(scrut0.into_token_stream(), zip);
+                let scrut0 = match scrut0 {
+                    Scrutinee::Bind(e) => e.into_token_stream(),
+                    Scrutinee::Let(e) => quote! { #namespace::pure(#e) },
+                    Scrutinee::Ret(e) => quote! { #namespace::pure(#e) },
+                };
+                let body = scrutinees.into_iter().fold(scrut0, zip);
                 let pat = pats.into_iter().fold(pat0.into_token_stream(), |x, y| {
                     quote! { (#x, #y) }
                 });
-
-                Some(quote! { #fmap(#body, |#pat| #ret) })
+                let types::Return { expr: result, .. } = ret;
+                Some(quote! { #fmap(|#pat| #result, #body) })
             } else {
-                Some(quote! { #pure(#ret) })
+                let pure = quote! { #namespace::pure };
+                let types::Return { expr: result, .. } = ret;
+                Some(quote! { #pure(#result) })
             }
         } else {
             None

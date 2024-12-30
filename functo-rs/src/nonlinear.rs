@@ -1,5 +1,5 @@
 pub use super::data::{Functor, Pointed};
-use crate::impls::*;
+pub use crate::impls::*;
 
 pub struct AsNonlinear<F>(std::marker::PhantomData<F>);
 

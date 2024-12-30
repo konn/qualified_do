@@ -3,7 +3,7 @@
 
 use std::marker::PhantomData;
 
-use crate::impls::*;
+pub use crate::impls::*;
 
 /// A type-level label to force qualified_do to use `data::Functor`-hierarchy.
 pub struct AsData<F>(PhantomData<F>);

@@ -85,10 +85,7 @@ impl Apply for ZipVec {
     where
         F: FnMut(A, B) -> C,
     {
-        fa.into_iter()
-            .zip(fb.into_iter())
-            .map(|(a, b)| f(a, b))
-            .collect()
+        fa.into_iter().zip(fb).map(|(a, b)| f(a, b)).collect()
     }
 }
 

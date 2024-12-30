@@ -1,5 +1,4 @@
 fn main() {
-    use functo_rs::impls::*;
     use functo_rs::nonlinear::*;
     use qualified_do::qdo;
     let is = vec![1, 2, 3];

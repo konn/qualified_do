@@ -1,6 +1,5 @@
 fn main() {
     use functo_rs::control::*;
-    use functo_rs::impls::*;
     use qualified_do::qdo;
 
     let ans: Option<i64> = qdo! {OptionFunctor {

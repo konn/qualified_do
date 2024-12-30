@@ -1,6 +1,5 @@
 fn main() {
     use functo_rs::data::*;
-    use functo_rs::impls::*;
     use qualified_do::qdo;
     let is = vec![1, 2, 3];
     let js = vec![4, 5, 6];

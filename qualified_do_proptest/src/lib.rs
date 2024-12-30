@@ -114,4 +114,11 @@ mod tests {
             ]
         })
     }
+
+    proptest! {
+        #[test]
+        fn test_gen_expr(expr in gen_expr()) {
+            println!("{:?}", expr);
+        }
+    }
 }

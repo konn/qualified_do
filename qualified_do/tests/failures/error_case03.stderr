@@ -1,0 +1,27 @@
+error[E0599]: no variant or associated item named `and_then` found for enum `functo_rs::impls::ZipVec` in the current scope
+  --> tests/failures/error_case03.rs:5:5
+   |
+5  |       qdo! {ZipVec {
+   |  _____^
+6  | |         x <- vec![1,2,3];
+7  | |         y <- vec![4,5,6];
+8  | |         if x % 2 == 1 { vec![()]} else { vec![] };
+9  | |         return x + y;
+10 | |     }}
+   | |______^ variant or associated item not found in `ZipVec`
+   |
+   = note: this error originates in the macro `qdo` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0599]: no variant or associated item named `pure` found for enum `functo_rs::impls::ZipVec` in the current scope
+  --> tests/failures/error_case03.rs:5:5
+   |
+5  |       qdo! {ZipVec {
+   |  _____^
+6  | |         x <- vec![1,2,3];
+7  | |         y <- vec![4,5,6];
+8  | |         if x % 2 == 1 { vec![()]} else { vec![] };
+9  | |         return x + y;
+10 | |     }}
+   | |______^ variant or associated item not found in `ZipVec`
+   |
+   = note: this error originates in the macro `qdo` (in Nightly builds, run with -Z macro-backtrace for more info)

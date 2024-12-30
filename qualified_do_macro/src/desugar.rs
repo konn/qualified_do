@@ -3,11 +3,23 @@ use super::types::*;
 use proc_macro2::*;
 use quote::{quote, ToTokens};
 use std::collections::{HashSet, VecDeque};
-use syn::Error;
 use syn::{parse_quote, visit::*, ExprPath};
+use syn::{Error, Pat};
+
+fn mk_bind_cont(namespace: Namespace, p: Pat, body: TokenStream) -> TokenStream {
+    if let Pat::Ident(ident) = p {
+        return quote! { |#ident| #body };
+    }
+    let err = format!("Pattern match failed:\n  expected: {}", p.to_token_stream());
+    quote! { |v|
+        match v {
+            #p => #body,
+            _ => #namespace::fail(#err),
+        }
+    }
+}
 
 impl QDo {
-    // TODO: Support for MonadFail
     pub fn desugar(self) -> Result<TokenStream, syn::Error> {
         if let Some(e) = self.clone().desugar_applicative() {
             Ok(e)
@@ -50,9 +62,12 @@ impl QDo {
                 DoStatement::Let(Let { pat, expr, .. }) => Ok(quote! { {let #pat = #expr; #acc} }),
                 DoStatement::Bind(Bind {
                     pat: bindee, body, ..
-                }) => Ok(quote! {
-                    #and_then(#body, |#bindee| #acc)
-                }),
+                }) => {
+                    let closure = mk_bind_cont(namespace.clone(), bindee, acc);
+                    Ok(quote! {
+                        #and_then(#body, #closure)
+                    })
+                }
             })
     }
 

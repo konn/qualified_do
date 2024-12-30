@@ -1,6 +1,7 @@
 use punctuated::Punctuated;
 use syn::{parse::*, *};
 
+use super::types;
 use super::types::*;
 
 impl Parse for DoStatement {
@@ -10,8 +11,10 @@ impl Parse for DoStatement {
             Ok(Return(input.parse()?))
         } else if input.peek(Token![let]) {
             Ok(Let(input.parse()?))
-        } else if input.peek2(Token![<-]) {
-            Ok(Bind(input.parse()?))
+        // FIXME: This might be too expensive;
+        // consider using a more efficient way of parsing.
+        } else if let Ok(_) = input.fork().parse::<types::Bind>() {
+            Ok(Bind(input.parse().unwrap()))
         } else {
             Ok(Expr(input.parse()?))
         }

@@ -19,6 +19,7 @@ proc-macro2 = "1.0.92"
 quote = "1.0.37"
 proptest = "1.6.0"
 itertools = "0.13.0"
+either = "1.13.0"
 functo_rs = { path = "functo_rs" }
 qualified_do = { path = "qualified_do" }
 qualified_do_macro = { path = "qualified_do_macro" }

@@ -258,3 +258,31 @@ impl Monad for V2 {
         (a, b)
     }
 }
+
+pub trait MonadFail: Monad {
+    fn fail<A>(msg: &str) -> Self::Container<A>;
+}
+
+impl<T: MonadFail> AsNonlinear<T> {
+    pub fn fail<A>(msg: &str) -> T::Container<A> {
+        <T as MonadFail>::fail(msg)
+    }
+}
+
+impl MonadFail for OptionFunctor {
+    fn fail<A>(_msg: &str) -> Option<A> {
+        None
+    }
+}
+
+impl<E: From<String>> MonadFail for ResultFunctor<E> {
+    fn fail<A>(msg: &str) -> Result<A, E> {
+        Err(msg.to_string().into())
+    }
+}
+
+impl MonadFail for UndetVec {
+    fn fail<A>(_msg: &str) -> Vec<A> {
+        vec![]
+    }
+}

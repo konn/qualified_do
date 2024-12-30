@@ -14,6 +14,7 @@ path = "tests/trybuild.rs"
 [dev-dependencies]
 trybuild.workspace = true
 functo_rs.workspace = true
+either.workspace = true
 
 [dependencies]
 syn.workspace = true

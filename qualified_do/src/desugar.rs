@@ -8,7 +8,6 @@ use syn::{Error, PatIdent};
 
 impl QDo {
     // TODO: Support for MonadFail
-    // TODO: Support for ApplicativeDo
     pub fn desugar(self) -> Result<TokenStream, syn::Error> {
         if let Some(e) = self.clone().desugar_applicative() {
             Ok(e)

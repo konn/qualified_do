@@ -148,6 +148,10 @@ pub trait Monad: Apply + Pointed {
     fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
     where
         F: FnOnce(A) -> Self::Container<B>;
+
+    fn flatten<A>(ffa: Self::Container<Self::Container<A>>) -> Self::Container<A> {
+        <Self as Monad>::and_then(ffa, |fa| fa)
+    }
 }
 
 impl<F: Monad> AsControl<F> {
@@ -156,6 +160,10 @@ impl<F: Monad> AsControl<F> {
         G: FnOnce(A) -> F::Container<B>,
     {
         <F as Monad>::and_then(fa, f)
+    }
+
+    pub fn flatten<A>(ffa: F::Container<F::Container<A>>) -> F::Container<A> {
+        <F as Monad>::flatten(ffa)
     }
 }
 

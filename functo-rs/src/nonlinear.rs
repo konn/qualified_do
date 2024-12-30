@@ -179,6 +179,14 @@ pub trait Monad: Apply + Pointed {
         A: Clone,
         B: Clone,
         F: FnMut(A) -> Self::Container<B>;
+
+    fn flatten<A>(ffa: Self::Container<Self::Container<A>>) -> Self::Container<A>
+    where
+        A: Clone,
+        Self::Container<A>: Clone,
+    {
+        <Self as Monad>::and_then(ffa, |fa| fa)
+    }
 }
 
 impl<F: Monad> AsNonlinear<F> {
@@ -187,6 +195,13 @@ impl<F: Monad> AsNonlinear<F> {
         G: FnMut(A) -> F::Container<B>,
     {
         <F as Monad>::and_then(fa, f)
+    }
+
+    pub fn flatten<A: Clone>(ffa: F::Container<F::Container<A>>) -> F::Container<A>
+    where
+        F::Container<A>: Clone,
+    {
+        <F as Monad>::flatten(ffa)
     }
 }
 

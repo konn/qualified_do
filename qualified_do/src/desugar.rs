@@ -35,7 +35,7 @@ impl QDo {
             .try_rfold(last, |acc, stmt| match stmt {
                 DoStatement::Expr(expr) => Ok(quote! { #and_then(#expr, |_| #acc) }),
                 DoStatement::Return(Return { expr, .. }) => {
-                    Ok(quote! { #and_then(#pure(#expr), |_| acc) })
+                    Ok(quote! { #and_then(#pure(#expr), |_| #acc) })
                 }
                 DoStatement::Let(Let { pat, expr, .. }) => Ok(quote! { {let #pat = #expr; #acc} }),
                 DoStatement::Bind(Bind { bindee, body, .. }) => Ok(quote! {

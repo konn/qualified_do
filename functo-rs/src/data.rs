@@ -184,3 +184,26 @@ impl Apply for V2 {
         (f(fa.0, fb.0), f(fa.1, fb.1))
     }
 }
+
+pub trait Alternative: Apply + Pointed {
+    fn empty<T>() -> Self::Container<T>;
+    fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T>;
+
+    fn guard(p: bool) -> Self::Container<()> {
+        if p {
+            Self::pure(())
+        } else {
+            Self::empty()
+        }
+    }
+}
+
+impl Alternative for OptionFunctor {
+    fn empty<T>() -> Option<T> {
+        None
+    }
+
+    fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T> {
+        a.or(b)
+    }
+}

@@ -97,6 +97,40 @@ impl Apply for V2 {
     }
 }
 
+pub trait Alternative: Apply + Pointed {
+    fn empty<T>() -> Self::Container<T>;
+    fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T>;
+
+    fn guard(p: bool) -> Self::Container<()> {
+        if p {
+            Self::pure(())
+        } else {
+            Self::empty()
+        }
+    }
+}
+
+impl Alternative for OptionFunctor {
+    fn empty<T>() -> Self::Container<T> {
+        None
+    }
+
+    fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T> {
+        a.or(b)
+    }
+}
+
+impl Alternative for UndetVec {
+    fn empty<T>() -> Self::Container<T> {
+        vec![]
+    }
+
+    fn choice<T>(mut a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T> {
+        a.extend(b);
+        a
+    }
+}
+
 pub trait Monad: Apply + Pointed {
     fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
     where

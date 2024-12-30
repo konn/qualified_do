@@ -37,7 +37,7 @@ impl QDo {
                 DoStatement::Return(Return { expr, .. }) => {
                     Ok(quote! { #and_then(#pure(#expr), |_| acc) })
                 }
-                DoStatement::Let(Let { pat, expr, .. }) => Ok(quote! { (|#pat| #acc)(#expr) }),
+                DoStatement::Let(Let { pat, expr, .. }) => Ok(quote! { {let #pat = #expr; #acc} }),
                 DoStatement::Bind(Bind { bindee, body, .. }) => Ok(quote! {
                     #and_then(#body, |#bindee| #acc)
                 }),

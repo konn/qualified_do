@@ -1,0 +1,5 @@
+error: Expected an expression or return statement at the last
+ --> tests/error_case02.rs:6:9
+  |
+6 |         x <- Some(5)
+  |         ^^^^^^^^^^^^

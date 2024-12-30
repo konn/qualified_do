@@ -3,9 +3,11 @@ resolver = "2"
 members = ["functo-rs", "qualified_do"]
 
 [workspace.dependencies]
-syn = "2.0.91"
+syn = { version = "2.0.91", features = ["full", "visit", "visit-mut", "fold"] }
 proc-macro2 = "1.0.92"
 quote = "1.0.37"
 proptest = "1.6.0"
+itertools = "0.13.0"
 functo-rs = { path = "functo-rs" }
 qualified_do = { path = "qualified_do" }
+trybuild = { version = "1.0.49", features = ["diff"] }

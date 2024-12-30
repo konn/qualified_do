@@ -13,7 +13,7 @@ path = "tests/trybuild.rs"
 
 [dev-dependencies]
 trybuild.workspace = true
-functo-rs.workspace = true
+functo_rs.workspace = true
 
 [dependencies]
 syn.workspace = true

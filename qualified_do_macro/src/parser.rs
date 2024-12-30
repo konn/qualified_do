@@ -13,7 +13,7 @@ impl Parse for DoStatement {
             Ok(Let(input.parse()?))
         // FIXME: This might be too expensive;
         // consider using a more efficient way of parsing.
-        } else if let Ok(_) = input.fork().parse::<types::Bind>() {
+        } else if input.fork().parse::<types::Bind>().is_ok() {
             Ok(Bind(input.parse().unwrap()))
         } else {
             Ok(Expr(input.parse()?))

@@ -1,8 +1,25 @@
 pub use super::data::{Functor, Pointed};
 use crate::impls::*;
 
+pub struct AsNonlinear<F>(std::marker::PhantomData<F>);
+
+impl<F: Functor> AsNonlinear<F> {
+    pub fn fmap<A, B, G>(f: G, fa: F::Container<A>) -> F::Container<B>
+    where
+        G: Fn(A) -> B,
+    {
+        <F as Functor>::fmap(f, fa)
+    }
+}
+
+impl<F: Pointed> AsNonlinear<F> {
+    pub fn pure<T: Clone>(t: T) -> F::Container<T> {
+        <F as Pointed>::pure(t)
+    }
+}
+
 pub trait Apply: Functor {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         f: F,
         fa: Self::Container<A>,
         fb: Self::Container<B>,
@@ -13,8 +30,19 @@ pub trait Apply: Functor {
         F: FnMut(A, B) -> C;
 }
 
+impl<F: Apply> AsNonlinear<F> {
+    pub fn zip_with<A, B, C, G>(f: G, fa: F::Container<A>, fb: F::Container<B>) -> F::Container<C>
+    where
+        A: Clone,
+        B: Clone,
+        G: FnMut(A, B) -> C,
+    {
+        <F as Apply>::zip_with(f, fa, fb)
+    }
+}
+
 impl Apply for Identity {
-    fn zip_with<A, B, C, F, G>(mut f: F, a: A, b: B) -> C
+    fn zip_with<A, B, C, F>(mut f: F, a: A, b: B) -> C
     where
         F: FnMut(A, B) -> C,
     {
@@ -23,7 +51,7 @@ impl Apply for Identity {
 }
 
 impl Apply for OptionFunctor {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
         fb: Self::Container<B>,
@@ -36,7 +64,7 @@ impl Apply for OptionFunctor {
 }
 
 impl<E> Apply for ResultFunctor<E> {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
         fb: Self::Container<B>,
@@ -49,7 +77,7 @@ impl<E> Apply for ResultFunctor<E> {
 }
 
 impl Apply for ZipVec {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
         fb: Self::Container<B>,
@@ -65,7 +93,7 @@ impl Apply for ZipVec {
 }
 
 impl Apply for UndetVec {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
         fb: Self::Container<B>,
@@ -83,7 +111,7 @@ impl Apply for UndetVec {
 }
 
 impl Apply for V2 {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         mut f: F,
         (a, b): Self::Container<A>,
         (c, d): Self::Container<B>,
@@ -107,6 +135,20 @@ pub trait Alternative: Apply + Pointed {
         } else {
             Self::empty()
         }
+    }
+}
+
+impl<F: Alternative> AsNonlinear<F> {
+    pub fn empty<T>() -> F::Container<T> {
+        <F as Alternative>::empty()
+    }
+
+    pub fn choice<T>(a: F::Container<T>, b: F::Container<T>) -> F::Container<T> {
+        <F as Alternative>::choice(a, b)
+    }
+
+    pub fn guard(p: bool) -> F::Container<()> {
+        <F as Alternative>::guard(p)
     }
 }
 
@@ -137,6 +179,15 @@ pub trait Monad: Apply + Pointed {
         A: Clone,
         B: Clone,
         F: FnMut(A) -> Self::Container<B>;
+}
+
+impl<F: Monad> AsNonlinear<F> {
+    pub fn and_then<A: Clone, B: Clone, G>(fa: F::Container<A>, f: G) -> F::Container<B>
+    where
+        G: FnMut(A) -> F::Container<B>,
+    {
+        <F as Monad>::and_then(fa, f)
+    }
 }
 
 impl Monad for Identity {

@@ -1,7 +1,21 @@
 //! Data functors abstracts over data-like structures, which can cosume continuations as many times as they want.
 //! Some of data functors can be [control functors][`crate::control`], which can consume continuations at most once.
 
+use std::marker::PhantomData;
+
 use crate::impls::*;
+
+/// A type-level label to force qualified_do to use `data::Functor`-hierarchy.
+pub struct AsData<F>(PhantomData<F>);
+
+impl<G: Functor> AsData<G> {
+    pub fn fmap<A, B, F>(f: F, fa: G::Container<A>) -> G::Container<B>
+    where
+        F: Fn(A) -> B,
+    {
+        G::fmap(f, fa)
+    }
+}
 
 pub trait Functor {
     type Container<T>;
@@ -81,6 +95,12 @@ pub trait Pointed: Functor {
     fn pure<T: Clone>(t: T) -> Self::Container<T>;
 }
 
+impl<G: Pointed> AsData<G> {
+    pub fn pure<T: Clone>(t: T) -> G::Container<T> {
+        G::pure(t)
+    }
+}
+
 impl Pointed for Identity {
     fn pure<T: Clone>(t: T) -> T {
         t
@@ -112,17 +132,40 @@ impl Pointed for V2 {
 }
 
 pub trait Apply: Functor {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         f: F,
         fa: Self::Container<A>,
         fb: Self::Container<B>,
     ) -> Self::Container<C>
     where
         F: FnMut(A, B) -> C;
+
+    fn ap<A, B, F>(ff: Self::Container<F>, fa: Self::Container<A>) -> Self::Container<B>
+    where
+        F: FnOnce(A) -> B,
+    {
+        Self::zip_with(|f, a| f(a), ff, fa)
+    }
+}
+
+impl<G: Apply> AsData<G> {
+    pub fn zip_with<A, B, C, F>(f: F, fa: G::Container<A>, fb: G::Container<B>) -> G::Container<C>
+    where
+        F: FnMut(A, B) -> C,
+    {
+        G::zip_with(f, fa, fb)
+    }
+
+    pub fn ap<A, B, F>(ff: G::Container<F>, fa: G::Container<A>) -> G::Container<B>
+    where
+        F: FnOnce(A) -> B,
+    {
+        G::ap(ff, fa)
+    }
 }
 
 impl Apply for Identity {
-    fn zip_with<A, B, C, F, G>(mut f: F, a: A, b: B) -> C
+    fn zip_with<A, B, C, F>(mut f: F, a: A, b: B) -> C
     where
         F: FnMut(A, B) -> C,
     {
@@ -131,7 +174,7 @@ impl Apply for Identity {
 }
 
 impl Apply for OptionFunctor {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
         fb: Self::Container<B>,
@@ -144,7 +187,7 @@ impl Apply for OptionFunctor {
 }
 
 impl<E> Apply for ResultFunctor<E> {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
         fb: Self::Container<B>,
@@ -157,7 +200,7 @@ impl<E> Apply for ResultFunctor<E> {
 }
 
 impl Apply for ZipVec {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
         fb: Self::Container<B>,
@@ -173,7 +216,7 @@ impl Apply for ZipVec {
 }
 
 impl Apply for V2 {
-    fn zip_with<A, B, C, F, G>(
+    fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
         fb: Self::Container<B>,
@@ -195,6 +238,20 @@ pub trait Alternative: Apply + Pointed {
         } else {
             Self::empty()
         }
+    }
+}
+
+impl<G: Alternative> AsData<G> {
+    pub fn empty<T>() -> G::Container<T> {
+        G::empty()
+    }
+
+    pub fn choice<T>(a: G::Container<T>, b: G::Container<T>) -> G::Container<T> {
+        G::choice(a, b)
+    }
+
+    pub fn guard(p: bool) -> G::Container<()> {
+        G::guard(p)
     }
 }
 

@@ -1,6 +1,6 @@
 [workspace]
 resolver = "2"
-members = ["functo_rs", "qualified_do"]
+members = ["functo_rs", "qualified_do", "qualified_do_proptest"]
 
 [workspace.dependencies]
 syn = { version = "2.0.91", features = [

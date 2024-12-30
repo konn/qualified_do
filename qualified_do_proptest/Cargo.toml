@@ -1,0 +1,9 @@
+[package]
+name = "qualified_do_proptest"
+autotests = true
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+qualified_do.workspace = true
+proptest.workspace = true

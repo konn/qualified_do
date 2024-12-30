@@ -1,12 +1,22 @@
 use super::types::*;
 use proc_macro2::*;
-use quote::quote;
-use syn::Error;
+use quote::{quote, ToTokens};
+use std::collections::HashSet;
+use syn::{parse_quote, visit::*, ExprPath};
+use syn::{Error, PatIdent};
 
 impl QDo {
     // TODO: Support for MonadFail
     // TODO: Support for ApplicativeDo
     pub fn desugar(self) -> Result<TokenStream, syn::Error> {
+        if let Some(e) = self.clone().desugar_applicative() {
+            Ok(e)
+        } else {
+            self.desugar_monad()
+        }
+    }
+
+    pub fn desugar_monad(self) -> Result<TokenStream, syn::Error> {
         let QDo {
             namespace,
             mut statements,
@@ -38,9 +48,72 @@ impl QDo {
                     Ok(quote! { #and_then(#pure(#expr), |_| #acc) })
                 }
                 DoStatement::Let(Let { pat, expr, .. }) => Ok(quote! { {let #pat = #expr; #acc} }),
-                DoStatement::Bind(Bind { bindee, body, .. }) => Ok(quote! {
+                DoStatement::Bind(Bind {
+                    pat: bindee, body, ..
+                }) => Ok(quote! {
                     #and_then(#body, |#bindee| #acc)
                 }),
             })
+    }
+
+    pub fn desugar_applicative(self) -> Option<TokenStream> {
+        use DoStatement::*;
+
+        if let Some(Return(ret)) = self.statements.last() {
+            // TODO: resolve duplicate binding collectly.
+            let n = self.statements.len();
+            let namespace = self.namespace;
+            let mut bound = HashSet::<Ident>::with_capacity(n);
+            let mut scrutinees = vec![];
+            let fmap = quote! { #namespace::fmap };
+            let pure = quote! { #namespace::pure };
+            let zip = |x: TokenStream, y: syn::Expr| quote! { #namespace::zip_with(|(a, b)| (a, b), #x, #y) };
+            for stmt in self.statements.iter().fuse() {
+                let mut call_visitor = ExprVarWalker::default();
+                call_visitor.visit_expr(stmt.body());
+                if call_visitor.0.intersection(&bound).next().is_some() {
+                    return None;
+                }
+                let scrutinee = stmt.body().clone();
+                let mut pat_visitor = PatVarWalker::default();
+                let pat = if let Some(pat) = stmt.binder() {
+                    pat_visitor.visit_pat(pat);
+                    bound.extend(pat_visitor.0);
+                    pat.clone()
+                } else {
+                    parse_quote! { _ }
+                };
+                scrutinees.push((scrutinee, pat));
+            }
+            if let Some((scrut0, pat0)) = scrutinees.pop() {
+                let (scrutinees, pats): (Vec<_>, Vec<_>) = scrutinees.into_iter().unzip();
+                let body = scrutinees.into_iter().fold(scrut0.into_token_stream(), zip);
+                let pat = pats.into_iter().fold(pat0.into_token_stream(), |x, y| {
+                    quote! { (#x, #y) }
+                });
+
+                Some(quote! { #fmap(#body, |#pat| #ret) })
+            } else {
+                Some(quote! { #pure(#ret) })
+            }
+        } else {
+            None
+        }
+    }
+}
+
+#[derive(Default)]
+struct PatVarWalker(HashSet<Ident>);
+impl Visit<'_> for PatVarWalker {
+    fn visit_pat_ident(&mut self, node: &PatIdent) {
+        self.0.insert(node.ident.clone());
+    }
+}
+
+#[derive(Default)]
+struct ExprVarWalker(HashSet<Ident>);
+impl Visit<'_> for ExprVarWalker {
+    fn visit_expr_path(&mut self, node: &ExprPath) {
+        self.0.extend(node.path.get_ident().into_iter().cloned());
     }
 }

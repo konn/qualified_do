@@ -41,10 +41,16 @@ impl Parse for Let {
 impl Parse for Bind {
     fn parse(input: ParseStream) -> Result<Self> {
         Ok(Bind {
-            bindee: Pat::parse_single(input)?,
+            pat: Pat::parse_single(input)?,
             bind_token: input.parse::<Token![<-]>()?,
             body: input.parse::<Expr>()?,
         })
+    }
+}
+
+impl Parse for Namespace {
+    fn parse(input: ParseStream) -> Result<Self> {
+        input.parse().map(Namespace)
     }
 }
 
@@ -54,7 +60,7 @@ impl Parse for QDo {
         let content;
         braced!(content in input);
         let statements = Punctuated::<DoStatement, Token![;]>::parse_terminated(&content)?;
-        if statements.len() == 0 {
+        if statements.is_empty() {
             return Err(Error::new(
                 content.span(),
                 "expected at least one statement",

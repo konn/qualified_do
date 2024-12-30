@@ -1,10 +1,8 @@
 fn main() {
-    use functo_rs::control::*;
-    use functo_rs::impls::*;
-    use qualified_do::qdo;
+    use syn::*;
 
-    let _: Option<()> = qdo! {OptionFunctor {
-        let k = 7i64;
-        return k;
-    }};
+    println!(
+        "{:?}",
+        syn::parse_str::<Expr>("match hoge { ::None => true }").unwrap()
+    );
 }

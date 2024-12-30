@@ -27,7 +27,9 @@ jobs:
         uses: dtolnay/rust-toolchain@stable
       - uses: Swatinem/rust-cache@v2
       - name: Check documentation warning
-        run: cargo doc --no-deps -- -D warnings
+        run: cargo doc --no-deps
+        env:
+          RUSTDOCFLAGS: -D warnings
 
   fmt:
     runs-on: ubuntu-latest

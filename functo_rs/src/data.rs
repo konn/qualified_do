@@ -261,3 +261,13 @@ impl Alternative for OptionFunctor {
         a.or(b)
     }
 }
+
+impl<E: Default> Alternative for ResultFunctor<E> {
+    fn empty<T>() -> Result<T, E> {
+        Err(E::default())
+    }
+
+    fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T> {
+        a.or(b)
+    }
+}

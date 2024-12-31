@@ -24,4 +24,19 @@ mod tests {
         }};
         assert_eq!(answer, Some(103));
     }
+
+    #[test]
+    fn text_optioned_resulted_nested() {
+        let ans: Result<i64, String> = qdo! { Resulted {
+            x <- qdo!{ Optioned {
+                x <- Some(1);
+                y <- Some(2);
+                guard x + y % 2 == 1;
+                return x + y + 100
+            }}.ok_or("Failed".to_string());
+            y <- Ok(3);
+            return x + y + 1000
+        }};
+        assert_eq!(ans, Ok(1106));
+    }
 }

@@ -215,3 +215,50 @@ impl<E: From<String>> MonadFail for ResultFunctor<E> {
         Err(msg.to_string().into())
     }
 }
+
+pub trait Alternative: Apply + Pointed {
+    fn empty<T>() -> Self::Container<T>;
+    fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T>;
+
+    fn guard(p: bool) -> Self::Container<()> {
+        if p {
+            <Self as Pointed>::pure(())
+        } else {
+            Self::empty()
+        }
+    }
+}
+
+impl<G: Alternative> AsControl<G> {
+    pub fn empty<T>() -> G::Container<T> {
+        G::empty()
+    }
+
+    pub fn choice<T>(a: G::Container<T>, b: G::Container<T>) -> G::Container<T> {
+        G::choice(a, b)
+    }
+
+    pub fn guard(p: bool) -> G::Container<()> {
+        G::guard(p)
+    }
+}
+
+impl Alternative for OptionFunctor {
+    fn empty<T>() -> Option<T> {
+        None
+    }
+
+    fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T> {
+        a.or(b)
+    }
+}
+
+impl<E: Default> Alternative for ResultFunctor<E> {
+    fn empty<T>() -> Result<T, E> {
+        Err(E::default())
+    }
+
+    fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T> {
+        a.or(b)
+    }
+}

@@ -4,12 +4,16 @@ fn main() {
     let is = vec![1, 2, 3];
     let js = vec![4, 5, 6];
 
-    let ans: Vec<i64> = qdo! {ZipVec {
-        i <- is.clone();
-        j <- js.clone();
-        let k = 100i64;
-        return i + j + k
-    }};
+    let ans: Vec<i64> = {
+        let is = is.clone();
+        let js = js.clone();
+        qdo! {ZipVec {
+            i <- is;
+            j <- js;
+            let k = 100i64;
+            return i + j + k
+        }}
+    };
     assert_eq!(
         ans,
         is.into_iter()

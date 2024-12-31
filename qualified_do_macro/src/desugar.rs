@@ -91,7 +91,7 @@ impl QDo {
                     })
                 }
                 DoStatement::Guard(Guard { cond, .. }) => Ok(quote! {
-                    #and_then(#guard(#cond), |()| #acc)
+                    #and_then(#guard(#cond), move |()| #acc)
                 }),
             })
     }

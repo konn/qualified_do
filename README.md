@@ -130,3 +130,44 @@ fn gen_expr() -> impl Strategy<Value = Expr> {
     })
 }
 ```
+
+## Syntax
+
+The `qdo` macro has the following syntax:
+
+```rust
+qdo!{ NAMESPACE {
+  stmt1;
+  stmt2;
+  ...
+  last_stmt [;] // Last ; is optional and changes the return value
+}}
+```
+
+- `NAMESPACE`: module or type path to _qualify_ control functions.
+- `stmt`s are do-statement, which should be one of the followings:
+  + `let pat = expr;`: let-statement for (non-effectful) local binding.
+  + `return a`: which wraps (pure) value `a` into effectful context;
+
+    __NOTE__: This DOES NOT do any early return. It is interpreted as just a syntactic
+              sugar around `NAMESPACE::pure(a)`.
+  + `pat <- expr`: _effectful_ local binding. Corresponding roughly to `NAMESPACE::and_then`
+  + `expr`: effectful expression, with its result discarded.
+- `last_stmt` MUST either be `return expr` or `expr`.
+  + If there is no `;` atfter `last_stmt`, the final effectful value(s) will be returned.
+  + If `last_stmt` is followed by `;`, the values are discarded and replaced with `()` inside effectful context.
+
+If `pat` is just a single identifier, it is desugared to a simple closure.
+If the `pat` is falliable pattern, it desugars into closure with `match`-expression, with default value calls `NAMESPACE::fail` to report pattern-match failure.
+
+Further more, if the following conditions are met, `qdo`-expression will be desugared in `ApplicativeDo`-mode, which desugars in terms of `NAMESPACE::fmap`, `NAMESPACE::zip_with`, and possibly `NAMESPACE::pure`:
+
+1. All `stmt`s but `last_stmt` contains NO varibale bound in `qdo`-context,
+2. All binding patterns are identifiers, not a compound pattern, and,
+3. The `last_stmt` is of form `return expr`, where `expr` can refer to any identifier in scope including those bound in qdo.
+
+In `ApplicativeDo` mode, all binding can be chained independently so they are chained with `NAMESPACE::zip_with` and finally mapped with `fmap`[^1].
+
+[^1]: In Haskell, `ApplicativeDo` uses `fmap`, `ap`, and `join`. The reason we don't use join is that `join` needs nested container, which has less availability in Rust than Haskell.
+
+`ApplicativeDo` utilises the independence of each binding, so in some cases you need less `clone()`s.

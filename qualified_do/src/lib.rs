@@ -27,16 +27,20 @@ mod tests {
 
     #[test]
     fn text_optioned_resulted_nested() {
-        let ans: Result<i64, String> = qdo! { Resulted {
-            x <- qdo!{ Optioned {
-                x <- Some(1);
-                y <- Some(2);
-                guard x + y % 2 == 1;
-                return x + y + 100
-            }}.ok_or("Failed".to_string());
-            y <- Ok(3);
-            return x + y + 1000
-        }};
-        assert_eq!(ans, Ok(1106));
+        let ans: fn(bool) -> Result<i64, String> = |go: bool| {
+            qdo! { Resulted {
+                x <- qdo!{ Optioned {
+                    x <- Some(1);
+                    y <- Some(2);
+                    true <- Some(go);
+                    guard x + y % 2 == 1;
+                    return x + y + 100
+                }}.ok_or("Failed".to_string());
+                y <- Ok(3);
+                return x + y + 1000
+            }}
+        };
+        assert_eq!(ans(true), Ok(1106));
+        assert_eq!(ans(false), Err("Failed".to_string()));
     }
 }

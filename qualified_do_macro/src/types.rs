@@ -20,6 +20,13 @@ impl DoStatement {
         }
     }
 
+    pub fn irrefutable(&self) -> bool {
+        match self {
+            DoStatement::Bind(Bind { irrefutable, .. }) => irrefutable.is_some(),
+            _ => false,
+        }
+    }
+
     pub fn body(&self) -> &Expr {
         match self {
             DoStatement::Bind(Bind { body, .. }) => body,
@@ -92,6 +99,7 @@ impl ToTokens for Let {
 
 #[derive(Clone)]
 pub struct Bind {
+    pub irrefutable: Option<Token![~]>,
     pub pat: Pat,
     pub bind_token: Token![<-],
     pub body: Expr,
@@ -99,6 +107,7 @@ pub struct Bind {
 
 impl ToTokens for Bind {
     fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.irrefutable.to_tokens(tokens);
         self.pat.to_tokens(tokens);
         self.bind_token.to_tokens(tokens);
         self.body.to_tokens(tokens);

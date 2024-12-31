@@ -7,9 +7,17 @@ use syn::visit_mut::VisitMut;
 use syn::{parse_quote, visit::*, ExprPath, PatIdent};
 use syn::{Error, Pat};
 
-fn mk_bind_cont(namespace: Namespace, counter: &mut u64, p: Pat, body: TokenStream) -> TokenStream {
+fn mk_bind_cont(
+    namespace: Namespace,
+    counter: &mut u64,
+    irrefutable: bool,
+    p: Pat,
+    body: TokenStream,
+) -> TokenStream {
     if let Pat::Ident(ident) = p {
         return quote! { move |#ident| #body };
+    } else if irrefutable {
+        return quote! { move |#p| #body };
     }
     let err = format!("Pattern match failed:\n  expected: {}", p.to_token_stream());
     let var = fresh_var(counter);
@@ -70,8 +78,14 @@ impl QDo {
                     Ok(quote! { #and_then(#pure(#expr), |_| #acc) })
                 }
                 DoStatement::Let(Let { pat, expr, .. }) => Ok(quote! { {let #pat = #expr; #acc} }),
-                DoStatement::Bind(Bind { pat, body, .. }) => {
-                    let closure = mk_bind_cont(namespace.clone(), counter, pat, acc);
+                DoStatement::Bind(Bind {
+                    irrefutable,
+                    pat,
+                    body,
+                    ..
+                }) => {
+                    let closure =
+                        mk_bind_cont(namespace.clone(), counter, irrefutable.is_some(), pat, acc);
                     Ok(quote! {
                         #and_then(#body, #closure)
                     })
@@ -123,11 +137,11 @@ impl QDo {
                 if call_visitor.free.intersection(&bound).next().is_some() {
                     return None;
                 }
-                // TODO: Supprot `#[infalliable]` attribute
-                let binder = match stmt.binder().cloned() {
-                    Some(syn::Pat::Ident(pident)) => Some(Some(pident)),
+                let pat = match stmt.binder().cloned() {
+                    Some(p @ syn::Pat::Ident(_)) => Some(p),
+                    Some(p) if stmt.irrefutable() => Some(p),
                     Some(_) => None,
-                    None => Some(None),
+                    None => Some(parse_quote! { _ }),
                 }?;
                 let scrutinee = match stmt {
                     Let(types::Let { expr, .. }) => Scrutinee::Let(expr),
@@ -136,12 +150,9 @@ impl QDo {
                     Return(types::Return { expr, .. }) => Scrutinee::Ret(expr),
                     Guard(types::Guard { cond: expr, .. }) => Scrutinee::Guard(expr),
                 };
-                let pat: syn::Pat = if let Some(pident) = binder {
-                    bound.insert(pident.ident.clone());
-                    syn::Pat::Ident(pident)
-                } else {
-                    parse_quote! { _ }
-                };
+                let mut walker = PatVarWalker::default();
+                walker.visit_pat(&pat);
+                bound.extend(walker.pat_idents);
                 scrutinees.push_back((scrutinee, pat));
             }
 

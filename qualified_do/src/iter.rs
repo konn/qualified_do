@@ -71,6 +71,15 @@ impl Iter {
     pub fn fail<T: 'static>(_: &str) -> Box<dyn Iterator<Item = T>> {
         Box::new(empty())
     }
+
+    pub fn join<A, B>(a: A) -> Flatten<A::IntoIter>
+    where
+        A: IntoIterator,
+        B: IntoIterator,
+        A::Item: IntoIterator<Item = B::Item>,
+    {
+        a.into_iter().flatten()
+    }
 }
 
 #[cfg(test)]

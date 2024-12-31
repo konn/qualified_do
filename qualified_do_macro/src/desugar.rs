@@ -3,12 +3,12 @@ use super::types::*;
 use proc_macro2::*;
 use quote::{quote, ToTokens};
 use std::collections::{HashSet, VecDeque};
-use syn::{parse_quote, visit::*, ExprPath};
+use syn::{parse_quote, visit::*, ExprPath, PatIdent};
 use syn::{Error, Pat};
 
 fn mk_bind_cont(namespace: Namespace, counter: &mut u64, p: Pat, body: TokenStream) -> TokenStream {
     if let Pat::Ident(ident) = p {
-        return quote! { |#ident| #body };
+        return quote! { move |#ident| #body };
     }
     let err = format!("Pattern match failed:\n  expected: {}", p.to_token_stream());
     let var = fresh_var(counter);
@@ -108,7 +108,7 @@ impl QDo {
             for stmt in statements {
                 let mut call_visitor = ExprVarWalker::default();
                 call_visitor.visit_expr(stmt.body());
-                if call_visitor.0.intersection(&bound).next().is_some() {
+                if call_visitor.free.intersection(&bound).next().is_some() {
                     return None;
                 }
                 // TODO: Supprot `#[infalliable]` attribute
@@ -155,10 +155,41 @@ impl QDo {
     }
 }
 
-#[derive(Default)]
-struct ExprVarWalker(HashSet<Ident>);
+#[derive(Default, Clone)]
+struct PatVarWalker {
+    pat_idents: HashSet<Ident>,
+}
+
+impl Visit<'_> for PatVarWalker {
+    fn visit_pat_ident(&mut self, node: &PatIdent) {
+        self.pat_idents.insert(node.ident.clone());
+    }
+}
+
+#[derive(Default, Clone)]
+struct ExprVarWalker {
+    free: HashSet<Ident>,
+    bound: HashSet<Ident>,
+}
 impl Visit<'_> for ExprVarWalker {
     fn visit_expr_path(&mut self, node: &ExprPath) {
-        self.0.extend(node.path.get_ident().into_iter().cloned());
+        self.free.extend(
+            node.path
+                .get_ident()
+                .into_iter()
+                .filter(|p| !self.bound.contains(p))
+                .cloned(),
+        );
+    }
+
+    fn visit_expr_closure(&mut self, cls: &syn::ExprClosure) {
+        let mut deeper = self.clone();
+        let mut walker = PatVarWalker::default();
+        for i in cls.inputs.iter() {
+            walker.visit_pat(i);
+        }
+        deeper.bound.extend(walker.pat_idents);
+        deeper.visit_expr(&cls.body);
+        self.free.extend(deeper.free);
     }
 }

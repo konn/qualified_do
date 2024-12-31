@@ -164,7 +164,7 @@ If the `pat` is falliable pattern, it desugars into closure with `match`-express
 Further more, if the following conditions are met, `qdo`-expression will be desugared in `ApplicativeDo`-mode, which desugars in terms of `NAMESPACE::fmap`, `NAMESPACE::zip_with`, and possibly `NAMESPACE::pure`:
 
 1. All `stmt`s but `last_stmt` contains NO varibale bound in `qdo`-context,
-2. All binding patterns are identifiers, not a compound pattern, 
+2. All binding patterns are identifiers, not a compound pattern,
 3. No `guard` condition can be appear as `stmtN`, and,
 4. The `last_stmt` is of form `return expr`, where `expr` can refer to any identifier in scope including those bound in qdo.
 

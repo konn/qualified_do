@@ -2,30 +2,28 @@ use either::Either::*;
 use qualified_do::*;
 
 fn main() {
-    use functo_rs::nonlinear::*;
-    use qualified_do_macro::qdo;
-    let is = vec![1, 2, 3];
-    let js = vec![4, 5, 6];
-
-    let ans: Vec<i64> = {
-        let is = is.clone();
-        let js = js.clone();
-        qdo! {UndetVec {
-            i <- is.clone();
-            j <- js.clone();
-            let k = 100i64;
-            guard i % 2 == 1;
-            return i + j + k
+    let a = vec![Some(1), None, Some(3)];
+    let b = vec![Left(4), Left(5), Right(6)];
+    let answer = {
+        let a = a.clone();
+        let b = b.clone();
+        qdo! { Iter {
+            Some(x) <- a;
+            Left(y) <- b.clone();
+            let z = 100i64;
+            return x + y + z
         }}
+        .collect::<Vec<_>>()
     };
-    assert_eq!(
-        ans,
-        is.into_iter()
-            .flat_map(|i| js.iter().cloned().flat_map(move |j| if i % 2 == 1 {
-                Some(i + j + 100)
-            } else {
-                None
-            }))
-            .collect::<Vec<_>>()
-    );
+    let c = a
+        .into_iter()
+        .flatten()
+        .flat_map(|x| {
+            b.iter()
+                .cloned()
+                .flat_map(|x| x.left())
+                .map(move |y| x + y + 100)
+        })
+        .collect::<Vec<_>>();
+    assert_eq!(answer, c);
 }

@@ -185,11 +185,13 @@ mod tests {
     #[test]
     fn test_iter_guard() {
         use either::*;
+        let is: Vec<Option<i64>> = vec![Some(1), None, Some(3)];
+        let js: Vec<Either<i64, i64>> = vec![Left(4), Right(5), Right(6)];
         let ans: Vec<i64> = {
-            let is: Vec<Option<i64>> = vec![Some(1), None, Some(3)];
-            let js: Vec<Either<i64, i64>> = vec![Left(4), Right(5), Right(6)];
+            let is = is.clone();
+            let js = js.clone();
             qdo! {Iter {
-                Some(i) <- is.clone();
+                Some(i) <- is;
                 Right(j) <- js.clone();
                 guard j % 2 == 0;
                 let k = 100i64;
@@ -197,7 +199,17 @@ mod tests {
             }}
             .collect()
         };
-        assert_eq!(ans, vec![107, 109]);
+        let expected = is
+            .into_iter()
+            .flatten()
+            .flat_map(|i| {
+                js.iter().cloned().flat_map(move |j| {
+                    j.right()
+                        .and_then(move |j| (j % 2 == 0).then_some(i + j + 100))
+                })
+            })
+            .collect::<Vec<_>>();
+        assert_eq!(ans, expected);
     }
 
     #[test]
@@ -216,12 +228,11 @@ mod tests {
             }}
             .collect()
         };
-        assert_eq!(
-            ans,
-            is.into_iter()
-                .zip(js)
-                .map(|(i, j)| i + j + 100)
-                .collect::<HashSet<_>>()
-        );
+        let expected = is
+            .into_iter()
+            .zip(js)
+            .map(|(i, j)| i + j + 100)
+            .collect::<HashSet<_>>();
+        assert_eq!(ans, expected);
     }
 }

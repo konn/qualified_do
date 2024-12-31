@@ -8,6 +8,7 @@ pub enum DoStatement {
     Let(Let),
     Bind(Bind),
     Expr(Expr),
+    Guard(Guard),
 }
 
 impl DoStatement {
@@ -25,6 +26,7 @@ impl DoStatement {
             DoStatement::Let(Let { expr, .. }) => expr,
             DoStatement::Return(Return { expr, .. }) => expr,
             DoStatement::Expr(expr) => expr,
+            DoStatement::Guard(Guard { cond: expr, .. }) => expr,
         }
     }
 }
@@ -36,7 +38,25 @@ impl ToTokens for DoStatement {
             DoStatement::Let(l) => l.to_tokens(tokens),
             DoStatement::Bind(b) => b.to_tokens(tokens),
             DoStatement::Expr(e) => e.to_tokens(tokens),
+            DoStatement::Guard(g) => g.to_tokens(tokens),
         }
+    }
+}
+
+pub mod keywords {
+    syn::custom_keyword!(guard);
+}
+
+#[derive(Clone)]
+pub struct Guard {
+    pub guard_token: keywords::guard,
+    pub cond: Expr,
+}
+
+impl ToTokens for Guard {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.guard_token.to_tokens(tokens);
+        self.cond.to_tokens(tokens);
     }
 }
 

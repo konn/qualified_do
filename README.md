@@ -149,9 +149,10 @@ qdo!{ NAMESPACE {
   + `let pat = expr;`: let-statement for (non-effectful) local binding.
   + `return a`: which wraps (pure) value `a` into effectful context;
 
-    __NOTE__: This DOES NOT do any early return. It is interpreted as just a syntactic
-              sugar around `NAMESPACE::pure(a)`.
+    * __NOTE__: This DOES NOT do any early return. It is interpreted as just a syntactic
+                sugar around `NAMESPACE::pure(a)`.
   + `pat <- expr`: _effectful_ local binding. Corresponding roughly to `NAMESPACE::and_then`
+  + `guard expr`: guarding expression. Filters out `expr` is false. Desugared into `NAMESPACE::guard(expr)`.
   + `expr`: effectful expression, with its result discarded.
 - `last_stmt` MUST either be `return expr` or `expr`.
   + If there is no `;` atfter `last_stmt`, the final effectful value(s) will be returned.
@@ -163,8 +164,9 @@ If the `pat` is falliable pattern, it desugars into closure with `match`-express
 Further more, if the following conditions are met, `qdo`-expression will be desugared in `ApplicativeDo`-mode, which desugars in terms of `NAMESPACE::fmap`, `NAMESPACE::zip_with`, and possibly `NAMESPACE::pure`:
 
 1. All `stmt`s but `last_stmt` contains NO varibale bound in `qdo`-context,
-2. All binding patterns are identifiers, not a compound pattern, and,
-3. The `last_stmt` is of form `return expr`, where `expr` can refer to any identifier in scope including those bound in qdo.
+2. All binding patterns are identifiers, not a compound pattern, 
+3. No `guard` condition can be appear as `stmtN`, and,
+4. The `last_stmt` is of form `return expr`, where `expr` can refer to any identifier in scope including those bound in qdo.
 
 In `ApplicativeDo` mode, all binding can be chained independently so they are chained with `NAMESPACE::zip_with` and finally mapped with `fmap`[^1].
 

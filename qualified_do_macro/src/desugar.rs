@@ -43,6 +43,7 @@ impl QDo {
         } = self;
 
         let pure = quote! { #namespace::pure };
+        let guard = quote! { #namespace::guard };
         let and_then = quote! { #namespace::and_then };
         let counter = &mut 0;
 
@@ -75,16 +76,21 @@ impl QDo {
                         #and_then(#body, #closure)
                     })
                 }
+                DoStatement::Guard(Guard { cond, .. }) => Ok(quote! {
+                    #and_then(#guard(#cond), |()| #acc)
+                }),
             })
     }
 
     pub fn desugar_applicative(self) -> Option<TokenStream> {
         use DoStatement::*;
         let mut statements = self.statements.clone();
+        let counter = &mut 0;
         enum Scrutinee {
             Let(syn::Expr),
             Bind(syn::Expr),
             Ret(syn::Expr),
+            Guard(syn::Expr),
         }
         let last = if self.trailing_semi {
             Some(Return(parse_quote! {return ()}))
@@ -99,11 +105,16 @@ impl QDo {
             let mut scrutinees = VecDeque::new();
             let fmap = quote! { #namespace::fmap };
             let zip = |x: TokenStream, y: Scrutinee| {
+                let a = fresh_var(counter);
+                let b = fresh_var(counter);
                 use Scrutinee::*;
                 match y {
-                    Bind(y) => quote! { #namespace::zip_with(|a, b| (a, b), #x, #y) },
-                    Let(y) => quote! { #namespace::fmap(|a| { let b = #y; (a, b) }, #x) },
-                    Ret(y) => quote! { #namespace::fmap(|a| { let b = #y; (a, b)}, #x) },
+                    Bind(y) => quote! { #namespace::zip_with(|#a, #b| (#a, #b), #x, #y) },
+                    Let(y) => quote! { #namespace::fmap(|#a| { let #b = #y; (#a, #b) }, #x) },
+                    Ret(y) => quote! { #namespace::fmap(|#a| { let #b = #y; (#a, #b)}, #x) },
+                    Guard(g) => {
+                        quote! { #namespace::zip_with(|#a, #b| (#a, #b), #x, #namespace::guard(#g))}
+                    }
                 }
             };
             for stmt in statements {
@@ -123,6 +134,7 @@ impl QDo {
                     Bind(types::Bind { body, .. }) => Scrutinee::Bind(body),
                     Expr(expr) => Scrutinee::Let(expr),
                     Return(types::Return { expr, .. }) => Scrutinee::Ret(expr),
+                    Guard(types::Guard { cond: expr, .. }) => Scrutinee::Guard(expr),
                 };
                 let pat: syn::Pat = if let Some(pident) = binder {
                     bound.insert(pident.ident.clone());
@@ -143,6 +155,7 @@ impl QDo {
                     Scrutinee::Bind(e) => e.into_token_stream(),
                     Scrutinee::Let(e) => quote! { #namespace::pure(#e) },
                     Scrutinee::Ret(e) => quote! { #namespace::pure(#e) },
+                    Scrutinee::Guard(e) => quote! { #namespace::guard(#e) },
                 };
                 let body = scrutinees.into_iter().fold(scrut0, zip);
                 let pat = pats.into_iter().fold(pat0.into_token_stream(), |x, y| {

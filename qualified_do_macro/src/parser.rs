@@ -11,6 +11,8 @@ impl Parse for DoStatement {
             Ok(Return(input.parse()?))
         } else if input.peek(Token![let]) {
             Ok(Let(input.parse()?))
+        } else if input.peek(keywords::guard) {
+            Ok(Guard(input.parse()?))
         // FIXME: This might be too expensive;
         // consider using a more efficient way of parsing.
         } else if input.fork().parse::<types::Bind>().is_ok() {
@@ -26,6 +28,15 @@ impl Parse for Return {
         Ok(Return {
             return_token: input.parse()?,
             expr: input.parse::<Expr>()?,
+        })
+    }
+}
+
+impl Parse for Guard {
+    fn parse(input: ParseStream) -> Result<Self> {
+        Ok(Guard {
+            guard_token: input.parse::<keywords::guard>()?,
+            cond: input.parse::<Expr>()?,
         })
     }
 }

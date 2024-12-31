@@ -11,7 +11,7 @@ fn main() {
             i <- is.clone();
             j <- js.clone();
             let k = 100i64;
-            UndetVec::guard(i % 2 == 1);
+            guard i % 2 == 1;
             return i + j + k
         }}
     };

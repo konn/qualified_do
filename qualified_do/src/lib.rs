@@ -27,12 +27,17 @@ mod tests {
 
     #[test]
     fn text_optioned_resulted_nested() {
-        let ans: fn(bool) -> Result<i64, String> = |go: bool| {
+        #[derive(Debug, Copy, Clone)]
+        enum Go {
+            Go,
+            NoGo,
+        }
+        let ans: fn(Go) -> Result<i64, String> = |go: Go| {
             qdo! { Resulted {
                 x <- qdo!{ Optioned {
                     x <- Some(1);
                     y <- Some(2);
-                    true <- Some(go);
+                    Go::Go <- Some(go);
                     guard x + y % 2 == 1;
                     return x + y + 100
                 }}.ok_or("Failed".to_string());
@@ -40,7 +45,7 @@ mod tests {
                 return x + y + 1000
             }}
         };
-        assert_eq!(ans(true), Ok(1106));
-        assert_eq!(ans(false), Err("Failed".to_string()));
+        assert_eq!(ans(Go::Go), Ok(1106));
+        assert_eq!(ans(Go::NoGo), Err("Failed".to_string()));
     }
 }

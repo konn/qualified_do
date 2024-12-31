@@ -3,6 +3,7 @@ use super::types::*;
 use proc_macro2::*;
 use quote::{quote, ToTokens};
 use std::collections::{HashSet, VecDeque};
+use syn::visit_mut::VisitMut;
 use syn::{parse_quote, visit::*, ExprPath, PatIdent};
 use syn::{Error, Pat};
 
@@ -131,6 +132,11 @@ impl QDo {
                 };
                 scrutinees.push_back((scrutinee, pat));
             }
+
+            let mut sealer = PatVarSealer::default();
+            for (_, p) in scrutinees.iter_mut().rev() {
+                sealer.visit_pat_mut(p);
+            }
             if let Some((scrut0, pat0)) = scrutinees.pop_front() {
                 let (scrutinees, pats): (Vec<_>, Vec<_>) = scrutinees.into_iter().unzip();
                 let scrut0 = match scrut0 {
@@ -191,5 +197,25 @@ impl Visit<'_> for ExprVarWalker {
         deeper.bound.extend(walker.pat_idents);
         deeper.visit_expr(&cls.body);
         self.free.extend(deeper.free);
+    }
+}
+
+#[derive(Debug, Default)]
+pub struct PatVarSealer {
+    bound: HashSet<Ident>,
+}
+
+impl VisitMut for PatVarSealer {
+    fn visit_pat_mut(&mut self, node: &mut Pat) {
+        match node {
+            Pat::Ident(ident) => {
+                if self.bound.contains(&ident.ident) {
+                    *node = parse_quote! { _ };
+                } else {
+                    self.bound.insert(ident.ident.clone());
+                }
+            }
+            p => syn::visit_mut::visit_pat_mut(self, p),
+        }
     }
 }

@@ -106,14 +106,9 @@ impl QDo {
             Ret(syn::Expr),
             Guard(syn::Expr),
         }
-        let last = if self.trailing_semi {
-            Some(Return(parse_quote! {return ()}))
-        } else {
-            statements.pop()
-        };
+        let last = statements.pop();
 
         if let Some(Return(ret)) = last {
-            // TODO: resolve duplicate binding collectly.
             let namespace = self.namespace;
             let mut bound = HashSet::<Ident>::with_capacity(statements.len());
             let mut scrutinees = VecDeque::new();
@@ -160,7 +155,7 @@ impl QDo {
             for (_, p) in scrutinees.iter_mut().rev() {
                 sealer.visit_pat_mut(p);
             }
-            if let Some((scrut0, pat0)) = scrutinees.pop_front() {
+            let result = if let Some((scrut0, pat0)) = scrutinees.pop_front() {
                 let (scrutinees, pats): (Vec<_>, Vec<_>) = scrutinees.into_iter().unzip();
                 let scrut0 = match scrut0 {
                     Scrutinee::Bind(e) => e.into_token_stream(),
@@ -173,11 +168,16 @@ impl QDo {
                     quote! { (#x, #y) }
                 });
                 let types::Return { expr: result, .. } = ret;
-                Some(quote! { #fmap(|#pat| #result, #body) })
+                quote! { #fmap(|#pat| #result, #body) }
             } else {
                 let pure = quote! { #namespace::pure };
                 let types::Return { expr: result, .. } = ret;
-                Some(quote! { #pure(#result) })
+                quote! { #pure(#result) }
+            };
+            if self.trailing_semi {
+                Some(quote! { #namespace::fmap(|_| (), #result) })
+            } else {
+                Some(result)
             }
         } else {
             None

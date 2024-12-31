@@ -165,7 +165,7 @@ Further more, if the following conditions are met, `qdo`-expression will be desu
 
 1. All `stmt`s but `last_stmt` contains NO varibale bound in `qdo`-context,
 2. All binding patterns are identifiers, not a compound pattern,
-3. No `guard` condition can be appear as `stmtN`, and,
+3. No `guard` condition in `stmtN` contains identifiers defined in `qdo`-context, and
 4. The `last_stmt` is of form `return expr`, where `expr` can refer to any identifier in scope including those bound in qdo.
 
 In `ApplicativeDo` mode, all binding can be chained independently so they are chained with `NAMESPACE::zip_with` and finally mapped with `fmap`[^1].

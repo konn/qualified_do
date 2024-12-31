@@ -5,23 +5,23 @@ use std::iter::*;
 pub enum ZipIter {}
 
 impl ZipIter {
-    pub fn fmap<A, O, F>(f: F, a: A) -> Box<dyn Iterator<Item = O>>
+    pub fn fmap<'a, A, O, F>(f: F, a: A) -> Box<dyn Iterator<Item = O> + 'a>
     where
-        A: IntoIterator + 'static,
-        F: FnMut(A::Item) -> O + 'static,
+        A: IntoIterator + 'a,
+        F: FnMut(A::Item) -> O + 'a,
     {
         Box::new(a.into_iter().map(f))
     }
 
-    pub fn pure<A: Clone + 'static>(a: A) -> Box<dyn Iterator<Item = A>> {
+    pub fn pure<'a, A: Clone + 'a>(a: A) -> Box<dyn Iterator<Item = A> + 'a> {
         Box::new(repeat(a))
     }
 
-    pub fn zip_with<A, B, C, F>(mut f: F, a: A, b: B) -> Box<dyn Iterator<Item = C>>
+    pub fn zip_with<'a, A, B, C, F>(mut f: F, a: A, b: B) -> Box<dyn Iterator<Item = C> + 'a>
     where
-        A: IntoIterator + 'static,
-        B: IntoIterator + 'static,
-        F: FnMut(A::Item, B::Item) -> C + 'static,
+        A: IntoIterator + 'a,
+        B: IntoIterator + 'a,
+        F: FnMut(A::Item, B::Item) -> C + 'a,
     {
         Box::new(a.into_iter().zip(b).map(move |(a, b)| f(a, b)))
     }
@@ -29,26 +29,26 @@ impl ZipIter {
 pub enum Iter {}
 
 impl Iter {
-    pub fn fmap<A, O, F>(f: F, a: A) -> Box<dyn Iterator<Item = O>>
+    pub fn fmap<'a, A, O, F>(f: F, a: A) -> Box<dyn Iterator<Item = O> + 'a>
     where
-        A: IntoIterator + 'static,
-        F: FnMut(A::Item) -> O + 'static,
+        A: IntoIterator + 'a,
+        F: FnMut(A::Item) -> O + 'a,
     {
         Box::new(a.into_iter().map(f))
     }
 
-    pub fn pure<A: 'static>(a: A) -> Box<dyn Iterator<Item = A>> {
+    pub fn pure<'a, A: 'a>(a: A) -> Box<dyn Iterator<Item = A> + 'a> {
         Box::new(once(a))
     }
 
-    pub fn zip_with<A, B, C, F>(mut f: F, a: A, b: B) -> Box<dyn Iterator<Item = C>>
+    pub fn zip_with<'a, A, B, C, F>(mut f: F, a: A, b: B) -> Box<dyn Iterator<Item = C> + 'a>
     where
         A: IntoIterator,
         B: IntoIterator,
-        B::IntoIter: Clone + 'static,
-        A::Item: Clone + 'static,
-        A::IntoIter: 'static,
-        F: FnMut(A::Item, B::Item) -> C + 'static,
+        B::IntoIter: Clone + 'a,
+        A::Item: Clone + 'a,
+        A::IntoIter: 'a,
+        F: FnMut(A::Item, B::Item) -> C + 'a,
     {
         let b = b.into_iter();
         Box::new(
@@ -58,17 +58,17 @@ impl Iter {
         )
     }
 
-    pub fn and_then<A, B, F>(a: A, f: F) -> Box<dyn Iterator<Item = B::Item>>
+    pub fn and_then<'a, A, B, F>(a: A, f: F) -> Box<dyn Iterator<Item = B::Item> + 'a>
     where
         A: IntoIterator,
-        B: IntoIterator + 'static,
-        A::IntoIter: 'static,
-        F: FnMut(A::Item) -> B + 'static,
+        B: IntoIterator + 'a,
+        A::IntoIter: 'a,
+        F: FnMut(A::Item) -> B + 'a,
     {
         Box::new(a.into_iter().flat_map(f))
     }
 
-    pub fn fail<T: 'static>(_: &str) -> Box<dyn Iterator<Item = T>> {
+    pub fn fail<'a, T: 'a>(_: &str) -> Box<dyn Iterator<Item = T> + 'a> {
         Box::new(empty())
     }
 
@@ -79,6 +79,14 @@ impl Iter {
         A::Item: IntoIterator<Item = B::Item>,
     {
         a.into_iter().flatten()
+    }
+
+    pub fn guard(cond: bool) -> Box<dyn Iterator<Item = ()>> {
+        if cond {
+            Box::new(once(()))
+        } else {
+            Box::new(empty())
+        }
     }
 }
 

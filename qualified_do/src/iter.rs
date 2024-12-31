@@ -199,4 +199,29 @@ mod tests {
         };
         assert_eq!(ans, vec![107, 109]);
     }
+
+    #[test]
+    fn test_zipiter_guard() {
+        use std::collections::HashSet;
+        let is: Vec<i64> = vec![1, 2, 3];
+        let js: Vec<i64> = vec![4, 5, 6];
+        let ans: HashSet<i64> = {
+            let is = is.clone();
+            let js = js.clone();
+            qdo! {ZipIter {
+                i <- is;
+                j <- js;
+                let k = 100i64;
+                return i + j + k
+            }}
+            .collect()
+        };
+        assert_eq!(
+            ans,
+            is.into_iter()
+                .zip(js)
+                .map(|(i, j)| i + j + 100)
+                .collect::<HashSet<_>>()
+        );
+    }
 }

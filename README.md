@@ -151,7 +151,8 @@ qdo!{ NAMESPACE {
 
     * __NOTE__: This DOES NOT do any early return. It is interpreted as just a syntactic
                 sugar around `NAMESPACE::pure(a)`.
-  + `pat <- expr`: _effectful_ local binding. Corresponding roughly to `NAMESPACE::and_then`
+  + `[~]pat <- expr`: _effectful_ local binding. Corresponding roughly to `NAMESPACE::and_then`
+    * `~` is omittable; if `~` is specified, it tries to desugar into simple closure on infalliable pattern.
   + `guard expr`: guarding expression. Filters out `expr` is false. Desugared into `NAMESPACE::guard(expr)`.
   + `expr`: effectful expression, with its result discarded.
 - `last_stmt` MUST either be `return expr` or `expr`.

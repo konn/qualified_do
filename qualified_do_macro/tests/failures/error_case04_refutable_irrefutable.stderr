@@ -1,0 +1,12 @@
+error[E0005]: refutable pattern in closure argument
+ --> tests/failures/error_case04_refutable_irrefutable.rs:5:5
+  |
+5 | /     qdo! {ZipVec {
+6 | |         x <- vec![1,2,3];
+7 | |         ~Some(y) <- vec![Some(4), None, Some(6)];
+8 | |         return x + y;
+9 | |     }};
+  | |______^ pattern `(_, None)` not covered
+  |
+  = note: the matched value is of type `(i32, Option<i32>)`
+  = note: this error originates in the macro `qdo` (in Nightly builds, run with -Z macro-backtrace for more info)

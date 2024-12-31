@@ -213,7 +213,7 @@ mod tests {
     }
 
     #[test]
-    fn test_zipiter_guard() {
+    fn test_zipiter_no_guard() {
         use std::collections::HashSet;
         let is: Vec<i64> = vec![1, 2, 3];
         let js: Vec<i64> = vec![4, 5, 6];

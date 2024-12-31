@@ -1,7 +1,7 @@
 use core::str;
+use itertools::Itertools;
 use std::iter::Iterator;
 use std::iter::*;
-
 pub enum ZipIter {}
 
 impl ZipIter {
@@ -24,6 +24,30 @@ impl ZipIter {
         F: FnMut(A::Item, B::Item) -> C + 'a,
     {
         Box::new(a.into_iter().zip(b).map(move |(a, b)| f(a, b)))
+    }
+
+    pub fn empty<'a, A: 'a>() -> Box<dyn Iterator<Item = A> + 'a> {
+        Box::new(empty())
+    }
+
+    pub fn guard(cond: bool) -> Box<dyn Iterator<Item = ()>> {
+        if cond {
+            Box::new(repeat(()))
+        } else {
+            Box::new(empty())
+        }
+    }
+
+    pub fn choice<'a, L, R>(l: L, r: R) -> Box<dyn Iterator<Item = L::Item> + 'a>
+    where
+        L: IntoIterator + 'a,
+        R: IntoIterator<Item = L::Item> + 'a,
+    {
+        use itertools::EitherOrBoth;
+        Box::new(l.into_iter().zip_longest(r).map(|e| match e {
+            EitherOrBoth::Left(e) | EitherOrBoth::Both(e, _) => e,
+            EitherOrBoth::Right(e) => e,
+        }))
     }
 }
 pub enum Iter {}
@@ -69,7 +93,7 @@ impl Iter {
     }
 
     pub fn fail<'a, T: 'a>(_: &str) -> Box<dyn Iterator<Item = T> + 'a> {
-        Box::new(empty())
+        Self::empty()
     }
 
     pub fn join<A, B>(a: A) -> Flatten<A::IntoIter>
@@ -87,6 +111,18 @@ impl Iter {
         } else {
             Box::new(empty())
         }
+    }
+
+    pub fn empty<'a, T: 'a>() -> Box<dyn Iterator<Item = T> + 'a> {
+        Box::new(empty())
+    }
+
+    pub fn choice<'a, L, R>(l: L, r: R) -> Box<dyn Iterator<Item = L::Item> + 'a>
+    where
+        L: IntoIterator + 'a,
+        R: IntoIterator<Item = L::Item> + 'a,
+    {
+        Box::new(l.into_iter().chain(r))
     }
 }
 

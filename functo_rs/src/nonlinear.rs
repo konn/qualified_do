@@ -1,4 +1,5 @@
 pub use super::data::{Functor, Pointed};
+use crate::data::unsafe_collect_array;
 pub use crate::impls::*;
 
 pub struct AsNonlinear<F>(std::marker::PhantomData<F>);
@@ -119,6 +120,21 @@ impl Apply for V2 {
         F: FnMut(A, B) -> C,
     {
         (f(a, c), f(b, d))
+    }
+}
+
+impl<const N: usize> Apply for ArrayFunctor<N> {
+    fn zip_with<A, B, C, F>(
+        f: F,
+        fa: Self::Container<A>,
+        fb: Self::Container<B>,
+    ) -> Self::Container<C>
+    where
+        A: Clone,
+        B: Clone,
+        F: FnMut(A, B) -> C,
+    {
+        <Self as crate::data::Apply>::zip_with(f, fa, fb)
     }
 }
 
@@ -246,6 +262,7 @@ impl Monad for UndetVec {
     }
 }
 
+/// Takes diagonal
 impl Monad for V2 {
     fn and_then<A, B, F>((a, b): Self::Container<A>, mut f: F) -> Self::Container<B>
     where
@@ -256,6 +273,18 @@ impl Monad for V2 {
         let (a, _) = f(a);
         let (_, b) = f(b);
         (a, b)
+    }
+}
+
+/// Takes diagonal upon joining
+impl<const N: usize> Monad for ArrayFunctor<N> {
+    fn and_then<A, B, F>(xs: Self::Container<A>, mut f: F) -> Self::Container<B>
+    where
+        A: Clone,
+        B: Clone,
+        F: FnMut(A) -> Self::Container<B>,
+    {
+        unsafe_collect_array(xs.into_iter().enumerate().map(|(i, x)| f(x)[i].clone()))
     }
 }
 

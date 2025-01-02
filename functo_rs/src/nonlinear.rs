@@ -14,6 +14,7 @@ impl<F: Functor> AsNonlinear<F> {
 }
 
 impl<F: Pointed> AsNonlinear<F> {
+    #[inline(always)]
     pub fn pure<T: Clone>(t: T) -> F::Container<T> {
         <F as Pointed>::pure(t)
     }
@@ -32,6 +33,7 @@ pub trait Apply: Functor {
 }
 
 impl<F: Apply> AsNonlinear<F> {
+    #[inline(always)]
     pub fn zip_with<A, B, C, G>(f: G, fa: F::Container<A>, fb: F::Container<B>) -> F::Container<C>
     where
         A: Clone,
@@ -43,6 +45,7 @@ impl<F: Apply> AsNonlinear<F> {
 }
 
 impl Apply for Identity {
+    #[inline(always)]
     fn zip_with<A, B, C, F>(mut f: F, a: A, b: B) -> C
     where
         F: FnMut(A, B) -> C,
@@ -52,6 +55,7 @@ impl Apply for Identity {
 }
 
 impl Apply for OptionFunctor {
+    #[inline(always)]
     fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
@@ -65,6 +69,7 @@ impl Apply for OptionFunctor {
 }
 
 impl<E> Apply for ResultFunctor<E> {
+    #[inline(always)]
     fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
@@ -78,6 +83,7 @@ impl<E> Apply for ResultFunctor<E> {
 }
 
 impl Apply for ZipVec {
+    #[inline(always)]
     fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
@@ -91,6 +97,7 @@ impl Apply for ZipVec {
 }
 
 impl Apply for UndetVec {
+    #[inline(always)]
     fn zip_with<A, B, C, F>(
         mut f: F,
         fa: Self::Container<A>,
@@ -109,6 +116,7 @@ impl Apply for UndetVec {
 }
 
 impl Apply for V2 {
+    #[inline(always)]
     fn zip_with<A, B, C, F>(
         mut f: F,
         (a, b): Self::Container<A>,
@@ -124,6 +132,7 @@ impl Apply for V2 {
 }
 
 impl<const N: usize> Apply for ArrayFunctor<N> {
+    #[inline(always)]
     fn zip_with<A, B, C, F>(
         f: F,
         fa: Self::Container<A>,
@@ -142,6 +151,7 @@ pub trait Alternative: Apply + Pointed {
     fn empty<T>() -> Self::Container<T>;
     fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T>;
 
+    #[inline(always)]
     fn guard(p: bool) -> Self::Container<()> {
         if p {
             Self::pure(())
@@ -152,34 +162,41 @@ pub trait Alternative: Apply + Pointed {
 }
 
 impl<F: Alternative> AsNonlinear<F> {
+    #[inline(always)]
     pub fn empty<T>() -> F::Container<T> {
         <F as Alternative>::empty()
     }
 
+    #[inline(always)]
     pub fn choice<T>(a: F::Container<T>, b: F::Container<T>) -> F::Container<T> {
         <F as Alternative>::choice(a, b)
     }
 
+    #[inline(always)]
     pub fn guard(p: bool) -> F::Container<()> {
         <F as Alternative>::guard(p)
     }
 }
 
 impl Alternative for OptionFunctor {
+    #[inline(always)]
     fn empty<T>() -> Self::Container<T> {
         None
     }
 
+    #[inline(always)]
     fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T> {
         a.or(b)
     }
 }
 
 impl Alternative for UndetVec {
+    #[inline(always)]
     fn empty<T>() -> Self::Container<T> {
         vec![]
     }
 
+    #[inline(always)]
     fn choice<T>(mut a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T> {
         a.extend(b);
         a
@@ -193,6 +210,7 @@ pub trait Monad: Apply + Pointed {
         B: Clone,
         F: FnMut(A) -> Self::Container<B>;
 
+    #[inline(always)]
     fn flatten<A>(ffa: Self::Container<Self::Container<A>>) -> Self::Container<A>
     where
         A: Clone,
@@ -203,6 +221,7 @@ pub trait Monad: Apply + Pointed {
 }
 
 impl<F: Monad> AsNonlinear<F> {
+    #[inline(always)]
     pub fn and_then<A: Clone, B: Clone, G>(fa: F::Container<A>, f: G) -> F::Container<B>
     where
         G: FnMut(A) -> F::Container<B>,
@@ -210,6 +229,7 @@ impl<F: Monad> AsNonlinear<F> {
         <F as Monad>::and_then(fa, f)
     }
 
+    #[inline(always)]
     pub fn flatten<A: Clone>(ffa: F::Container<F::Container<A>>) -> F::Container<A>
     where
         F::Container<A>: Clone,
@@ -219,6 +239,7 @@ impl<F: Monad> AsNonlinear<F> {
 }
 
 impl Monad for Identity {
+    #[inline(always)]
     fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
     where
         A: Clone,
@@ -230,6 +251,7 @@ impl Monad for Identity {
 }
 
 impl Monad for OptionFunctor {
+    #[inline(always)]
     fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
     where
         A: Clone,
@@ -241,6 +263,7 @@ impl Monad for OptionFunctor {
 }
 
 impl<E> Monad for ResultFunctor<E> {
+    #[inline(always)]
     fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
     where
         A: Clone,
@@ -252,6 +275,7 @@ impl<E> Monad for ResultFunctor<E> {
 }
 
 impl Monad for UndetVec {
+    #[inline(always)]
     fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
     where
         A: Clone,
@@ -264,6 +288,7 @@ impl Monad for UndetVec {
 
 /// Takes diagonal
 impl Monad for V2 {
+    #[inline(always)]
     fn and_then<A, B, F>((a, b): Self::Container<A>, mut f: F) -> Self::Container<B>
     where
         A: Clone,
@@ -278,6 +303,7 @@ impl Monad for V2 {
 
 /// Takes diagonal upon joining
 impl<const N: usize> Monad for ArrayFunctor<N> {
+    #[inline(always)]
     fn and_then<A, B, F>(xs: Self::Container<A>, mut f: F) -> Self::Container<B>
     where
         A: Clone,
@@ -293,24 +319,28 @@ pub trait MonadFail: Monad {
 }
 
 impl<T: MonadFail> AsNonlinear<T> {
+    #[inline(always)]
     pub fn fail<A>(msg: &str) -> T::Container<A> {
         <T as MonadFail>::fail(msg)
     }
 }
 
 impl MonadFail for OptionFunctor {
+    #[inline(always)]
     fn fail<A>(_msg: &str) -> Option<A> {
         None
     }
 }
 
 impl<E: From<String>> MonadFail for ResultFunctor<E> {
+    #[inline(always)]
     fn fail<A>(msg: &str) -> Result<A, E> {
         Err(msg.to_string().into())
     }
 }
 
 impl MonadFail for UndetVec {
+    #[inline(always)]
     fn fail<A>(_msg: &str) -> Vec<A> {
         vec![]
     }

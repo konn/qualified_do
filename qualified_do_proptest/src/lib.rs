@@ -5,6 +5,7 @@ use std::fmt::Debug;
 pub enum BoxedProptest {}
 
 impl BoxedProptest {
+    #[inline(always)]
     pub fn fmap<A, B, F>(f: F, fa: BoxedStrategy<A>) -> BoxedStrategy<B>
     where
         A: Debug + 'static,
@@ -14,10 +15,12 @@ impl BoxedProptest {
         fa.prop_map(f).boxed()
     }
 
+    #[inline(always)]
     pub fn pure<A: Clone + Debug + 'static>(a: A) -> BoxedStrategy<A> {
         Just(a).boxed()
     }
 
+    #[inline(always)]
     pub fn zip_with<A, B, C, F>(
         f: F,
         fa: BoxedStrategy<A>,
@@ -32,6 +35,7 @@ impl BoxedProptest {
         (fa, fb).prop_map(move |(a, b)| f(a, b)).boxed()
     }
 
+    #[inline(always)]
     pub fn and_then<A, B, F>(f: F, fa: BoxedStrategy<A>) -> BoxedStrategy<B>
     where
         A: Debug + 'static,
@@ -41,6 +45,7 @@ impl BoxedProptest {
         fa.prop_flat_map(f).boxed()
     }
 
+    #[inline(always)]
     pub fn fail<T: Clone + Debug + 'static>(msg: &str) -> BoxedStrategy<T> {
         Just(Option::<T>::None)
             .prop_filter_map(msg.to_string(), |i| i)
@@ -53,6 +58,7 @@ type Mapped<S, T, A, B, C> = strategy::Map<(S, T), Box<dyn Fn((A, B)) -> C + 'st
 pub enum Proptest {}
 
 impl Proptest {
+    #[inline(always)]
     pub fn fmap<A, B, S, F>(f: F, fa: S) -> strategy::Map<S, F>
     where
         S: Strategy<Value = A>,
@@ -63,10 +69,12 @@ impl Proptest {
         fa.prop_map(f)
     }
 
+    #[inline(always)]
     pub fn pure<A: Clone + Debug + 'static>(a: A) -> strategy::Just<A> {
         Just(a)
     }
 
+    #[inline(always)]
     pub fn zip_with<A, B, C, S, T, F>(f: F, fa: S, fb: T) -> Mapped<S, T, A, B, C>
     where
         A: Debug,
@@ -79,6 +87,7 @@ impl Proptest {
         (fa, fb).prop_map(Box::new(move |(a, b)| f(a, b)))
     }
 
+    #[inline(always)]
     pub fn and_then<A, B, S, T, F>(f: F, fa: S) -> strategy::Flatten<strategy::Map<S, F>>
     where
         A: Debug + 'static,
@@ -90,6 +99,7 @@ impl Proptest {
         fa.prop_flat_map(f)
     }
 
+    #[inline(always)]
     pub fn fail<T: Clone + Debug>(msg: &str) -> impl Strategy<Value = T> {
         Just(Option::<T>::None).prop_filter_map(msg.to_string(), |i| i)
     }

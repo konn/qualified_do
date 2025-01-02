@@ -13,6 +13,7 @@ pub trait Functor: data::Functor {
 }
 
 impl<F: Functor> AsControl<F> {
+    #[inline(always)]
     pub fn fmap<A, B, G>(f: G, fa: F::Container<A>) -> F::Container<B>
     where
         G: FnOnce(A) -> B,
@@ -22,6 +23,7 @@ impl<F: Functor> AsControl<F> {
 }
 
 impl Functor for Identity {
+    #[inline(always)]
     fn fmap<A, B, F>(f: F, a: A) -> B
     where
         F: FnOnce(A) -> B,
@@ -31,6 +33,7 @@ impl Functor for Identity {
 }
 
 impl Functor for OptionFunctor {
+    #[inline(always)]
     fn fmap<A, B, F>(f: F, fa: Self::Container<A>) -> Self::Container<B>
     where
         F: FnOnce(A) -> B,
@@ -40,6 +43,7 @@ impl Functor for OptionFunctor {
 }
 
 impl<E> Functor for ResultFunctor<E> {
+    #[inline(always)]
     fn fmap<A, B, F>(f: F, fa: Self::Container<A>) -> Self::Container<B>
     where
         F: FnOnce(A) -> B,
@@ -53,24 +57,28 @@ pub trait Pointed: Functor + data::Pointed {
 }
 
 impl<F: Pointed> AsControl<F> {
+    #[inline(always)]
     pub fn pure<A>(a: A) -> F::Container<A> {
         <F as Pointed>::pure(a)
     }
 }
 
 impl Pointed for Identity {
+    #[inline(always)]
     fn pure<A>(a: A) -> A {
         a
     }
 }
 
 impl Pointed for OptionFunctor {
+    #[inline(always)]
     fn pure<A>(a: A) -> Option<A> {
         Some(a)
     }
 }
 
 impl<E> Pointed for ResultFunctor<E> {
+    #[inline(always)]
     fn pure<A>(a: A) -> Result<A, E> {
         Ok(a)
     }
@@ -85,6 +93,7 @@ pub trait Apply: Functor + data::Apply {
     where
         F: FnOnce(A, B) -> C;
 
+    #[inline(always)]
     fn ap<A, B, F>(ff: Self::Container<F>, fa: Self::Container<A>) -> Self::Container<B>
     where
         F: FnOnce(A) -> B,
@@ -94,6 +103,7 @@ pub trait Apply: Functor + data::Apply {
 }
 
 impl<F: Apply> AsControl<F> {
+    #[inline(always)]
     pub fn zip_with<A, B, C, G>(f: G, fa: F::Container<A>, fb: F::Container<B>) -> F::Container<C>
     where
         G: FnOnce(A, B) -> C,
@@ -101,6 +111,7 @@ impl<F: Apply> AsControl<F> {
         <F as Apply>::zip_with(f, fa, fb)
     }
 
+    #[inline(always)]
     pub fn ap<A, B, G>(ff: F::Container<G>, fa: F::Container<A>) -> F::Container<B>
     where
         G: FnOnce(A) -> B,
@@ -110,6 +121,7 @@ impl<F: Apply> AsControl<F> {
 }
 
 impl Apply for Identity {
+    #[inline(always)]
     fn zip_with<A, B, C, F>(f: F, a: A, b: B) -> C
     where
         F: FnOnce(A, B) -> C,
@@ -119,6 +131,7 @@ impl Apply for Identity {
 }
 
 impl Apply for OptionFunctor {
+    #[inline(always)]
     fn zip_with<A, B, C, F>(
         f: F,
         fa: Self::Container<A>,
@@ -132,6 +145,7 @@ impl Apply for OptionFunctor {
 }
 
 impl<E> Apply for ResultFunctor<E> {
+    #[inline(always)]
     fn zip_with<A, B, C, F>(
         f: F,
         fa: Self::Container<A>,
@@ -149,12 +163,14 @@ pub trait Monad: Apply + Pointed {
     where
         F: FnOnce(A) -> Self::Container<B>;
 
+    #[inline(always)]
     fn flatten<A>(ffa: Self::Container<Self::Container<A>>) -> Self::Container<A> {
         <Self as Monad>::and_then(ffa, |fa| fa)
     }
 }
 
 impl<F: Monad> AsControl<F> {
+    #[inline(always)]
     pub fn and_then<A, B, G>(fa: F::Container<A>, f: G) -> F::Container<B>
     where
         G: FnOnce(A) -> F::Container<B>,
@@ -162,12 +178,14 @@ impl<F: Monad> AsControl<F> {
         <F as Monad>::and_then(fa, f)
     }
 
+    #[inline(always)]
     pub fn flatten<A>(ffa: F::Container<F::Container<A>>) -> F::Container<A> {
         <F as Monad>::flatten(ffa)
     }
 }
 
 impl Monad for Identity {
+    #[inline(always)]
     fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
     where
         F: FnOnce(A) -> Self::Container<B>,
@@ -177,6 +195,7 @@ impl Monad for Identity {
 }
 
 impl Monad for OptionFunctor {
+    #[inline(always)]
     fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
     where
         F: FnOnce(A) -> Self::Container<B>,
@@ -186,6 +205,7 @@ impl Monad for OptionFunctor {
 }
 
 impl<E> Monad for ResultFunctor<E> {
+    #[inline(always)]
     fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
     where
         F: FnOnce(A) -> Self::Container<B>,
@@ -199,18 +219,21 @@ pub trait MonadFail: Monad {
 }
 
 impl<T: MonadFail> AsControl<T> {
+    #[inline(always)]
     pub fn fail<A>(msg: &str) -> T::Container<A> {
         <T as MonadFail>::fail(msg)
     }
 }
 
 impl MonadFail for OptionFunctor {
+    #[inline(always)]
     fn fail<A>(_msg: &str) -> Option<A> {
         None
     }
 }
 
 impl<E: From<String>> MonadFail for ResultFunctor<E> {
+    #[inline(always)]
     fn fail<A>(msg: &str) -> Result<A, E> {
         Err(msg.to_string().into())
     }
@@ -220,6 +243,7 @@ pub trait Alternative: Apply + Pointed {
     fn empty<T>() -> Self::Container<T>;
     fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T>;
 
+    #[inline(always)]
     fn guard(p: bool) -> Self::Container<()> {
         if p {
             <Self as Pointed>::pure(())
@@ -230,34 +254,41 @@ pub trait Alternative: Apply + Pointed {
 }
 
 impl<G: Alternative> AsControl<G> {
+    #[inline(always)]
     pub fn empty<T>() -> G::Container<T> {
         G::empty()
     }
 
+    #[inline(always)]
     pub fn choice<T>(a: G::Container<T>, b: G::Container<T>) -> G::Container<T> {
         G::choice(a, b)
     }
 
+    #[inline(always)]
     pub fn guard(p: bool) -> G::Container<()> {
         G::guard(p)
     }
 }
 
 impl Alternative for OptionFunctor {
+    #[inline(always)]
     fn empty<T>() -> Option<T> {
         None
     }
 
+    #[inline(always)]
     fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T> {
         a.or(b)
     }
 }
 
 impl<E: Default> Alternative for ResultFunctor<E> {
+    #[inline(always)]
     fn empty<T>() -> Result<T, E> {
         Err(E::default())
     }
 
+    #[inline(always)]
     fn choice<T>(a: Self::Container<T>, b: Self::Container<T>) -> Self::Container<T> {
         a.or(b)
     }

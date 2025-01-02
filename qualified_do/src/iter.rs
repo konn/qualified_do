@@ -5,6 +5,7 @@ use std::iter::*;
 pub enum ZipIter {}
 
 impl ZipIter {
+    #[inline(always)]
     pub fn fmap<'a, A, O, F>(f: F, a: A) -> Box<dyn Iterator<Item = O> + 'a>
     where
         A: IntoIterator + 'a,
@@ -13,10 +14,12 @@ impl ZipIter {
         Box::new(a.into_iter().map(f))
     }
 
+    #[inline(always)]
     pub fn pure<'a, A: Clone + 'a>(a: A) -> Box<dyn Iterator<Item = A> + 'a> {
         Box::new(repeat(a))
     }
 
+    #[inline(always)]
     pub fn zip_with<'a, A, B, C, F>(mut f: F, a: A, b: B) -> Box<dyn Iterator<Item = C> + 'a>
     where
         A: IntoIterator + 'a,
@@ -26,10 +29,12 @@ impl ZipIter {
         Box::new(a.into_iter().zip(b).map(move |(a, b)| f(a, b)))
     }
 
+    #[inline(always)]
     pub fn empty<'a, A: 'a>() -> Box<dyn Iterator<Item = A> + 'a> {
         Box::new(empty())
     }
 
+    #[inline(always)]
     pub fn guard(cond: bool) -> Box<dyn Iterator<Item = ()>> {
         if cond {
             Box::new(repeat(()))
@@ -38,6 +43,7 @@ impl ZipIter {
         }
     }
 
+    #[inline(always)]
     pub fn choice<'a, L, R>(l: L, r: R) -> Box<dyn Iterator<Item = L::Item> + 'a>
     where
         L: IntoIterator + 'a,
@@ -53,6 +59,7 @@ impl ZipIter {
 pub enum Iter {}
 
 impl Iter {
+    #[inline(always)]
     pub fn fmap<'a, A, O, F>(f: F, a: A) -> Box<dyn Iterator<Item = O> + 'a>
     where
         A: IntoIterator + 'a,
@@ -61,10 +68,12 @@ impl Iter {
         Box::new(a.into_iter().map(f))
     }
 
+    #[inline(always)]
     pub fn pure<'a, A: 'a>(a: A) -> Box<dyn Iterator<Item = A> + 'a> {
         Box::new(once(a))
     }
 
+    #[inline(always)]
     pub fn zip_with<'a, A, B, C, F>(mut f: F, a: A, b: B) -> Box<dyn Iterator<Item = C> + 'a>
     where
         A: IntoIterator,
@@ -82,6 +91,7 @@ impl Iter {
         )
     }
 
+    #[inline(always)]
     pub fn and_then<'a, A, B, F>(a: A, f: F) -> Box<dyn Iterator<Item = B::Item> + 'a>
     where
         A: IntoIterator,
@@ -92,10 +102,12 @@ impl Iter {
         Box::new(a.into_iter().flat_map(f))
     }
 
+    #[inline(always)]
     pub fn fail<'a, T: 'a>(_: &str) -> Box<dyn Iterator<Item = T> + 'a> {
         Self::empty()
     }
 
+    #[inline(always)]
     pub fn join<A, B>(a: A) -> Flatten<A::IntoIter>
     where
         A: IntoIterator,
@@ -105,6 +117,7 @@ impl Iter {
         a.into_iter().flatten()
     }
 
+    #[inline(always)]
     pub fn guard(cond: bool) -> Box<dyn Iterator<Item = ()>> {
         if cond {
             Box::new(once(()))
@@ -113,10 +126,12 @@ impl Iter {
         }
     }
 
+    #[inline(always)]
     pub fn empty<'a, T: 'a>() -> Box<dyn Iterator<Item = T> + 'a> {
         Box::new(empty())
     }
 
+    #[inline(always)]
     pub fn choice<'a, L, R>(l: L, r: R) -> Box<dyn Iterator<Item = L::Item> + 'a>
     where
         L: IntoIterator + 'a,

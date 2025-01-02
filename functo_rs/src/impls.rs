@@ -23,3 +23,5 @@ pub struct Reader<R> {
 pub struct State<S> {
     pub env: PhantomData<S>,
 }
+
+pub struct ArrayFunctor<const N: usize> {}

@@ -1,6 +1,7 @@
 //! Data functors abstracts over data-like structures, which can cosume continuations as many times as they want.
 //! Some of data functors can be [control functors][`crate::control`], which can consume continuations at most once.
 
+use std::fmt::{Debug, Formatter};
 use std::marker::PhantomData;
 
 pub use crate::impls::*;
@@ -91,6 +92,17 @@ impl Functor for V2 {
     }
 }
 
+impl<const N: usize> Functor for ArrayFunctor<N> {
+    type Container<T> = [T; N];
+
+    fn fmap<A, B, F>(f: F, fa: Self::Container<A>) -> Self::Container<B>
+    where
+        F: Fn(A) -> B,
+    {
+        fa.map(f)
+    }
+}
+
 pub trait Pointed: Functor {
     fn pure<T: Clone>(t: T) -> Self::Container<T>;
 }
@@ -128,6 +140,29 @@ impl Pointed for UndetVec {
 impl Pointed for V2 {
     fn pure<T: Clone>(t: T) -> (T, T) {
         (t.clone(), t)
+    }
+}
+
+#[derive(Clone)]
+pub(crate) struct WrapArrayStruct<U>(pub(crate) U);
+impl<U> Debug for WrapArrayStruct<U> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        f.write_str("<ELEMENT>")
+    }
+}
+
+pub(crate) fn unsafe_collect_array<const N: usize, I>(iter: I) -> [I::Item; N]
+where
+    I: Iterator,
+{
+    <[WrapArrayStruct<I::Item>; N]>::try_from(iter.map(WrapArrayStruct).collect::<Vec<_>>())
+        .unwrap()
+        .map(|WrapArrayStruct(t)| t)
+}
+
+impl<const N: usize> Pointed for ArrayFunctor<N> {
+    fn pure<T: Clone>(t: T) -> [T; N] {
+        unsafe_collect_array(std::iter::repeat_n(t, N))
     }
 }
 
@@ -222,6 +257,19 @@ impl Apply for V2 {
         F: FnMut(A, B) -> C,
     {
         (f(fa.0, fb.0), f(fa.1, fb.1))
+    }
+}
+
+impl<const N: usize> Apply for ArrayFunctor<N> {
+    fn zip_with<A, B, C, F>(
+        mut f: F,
+        fa: Self::Container<A>,
+        fb: Self::Container<B>,
+    ) -> Self::Container<C>
+    where
+        F: FnMut(A, B) -> C,
+    {
+        unsafe_collect_array(fa.into_iter().zip(fb).map(|(a, b)| f(a, b)))
     }
 }
 

@@ -310,7 +310,11 @@ impl<const N: usize> Monad for ArrayFunctor<N> {
         B: Clone,
         F: FnMut(A) -> Self::Container<B>,
     {
-        unsafe_collect_array(xs.into_iter().enumerate().map(|(i, x)| f(x)[i].clone()))
+        unsafe_collect_array(
+            xs.into_iter()
+                .enumerate()
+                .flat_map(|(i, x)| f(x).into_iter().nth(i)),
+        )
     }
 }
 
@@ -343,5 +347,29 @@ impl MonadFail for UndetVec {
     #[inline(always)]
     fn fail<A>(_msg: &str) -> Vec<A> {
         vec![]
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_array_monad() {
+        assert_eq!(
+            ArrayFunctor::and_then([1, 2, 3, 4, 5], |x| [x, x + 1, x + 2, x + 3, x + 4]).to_vec(),
+            [1, 2, 3, 4, 5]
+                .into_iter()
+                .enumerate()
+                .map(|(i, x)| i + x)
+                .collect::<Vec<_>>()
+        )
+    }
+
+    #[test]
+    fn test_array_zip_with() {
+        assert_eq!(
+            ArrayFunctor::zip_with(|a, b| a + b, [1, 2, 3], [4, 5, 6]).to_vec(),
+            ArrayFunctor::and_then([1, 2, 3], |a| ArrayFunctor::fmap(|b| a + b, [4, 5, 6]))
+        )
     }
 }

@@ -5,4 +5,3 @@ license = "MIT"
 edition = "2021"
 
 [dependencies]
-itertools.workspace = true

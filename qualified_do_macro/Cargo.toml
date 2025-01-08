@@ -5,6 +5,7 @@ autotests = false
 license.workspace = true
 edition.workspace = true
 authors.workspace = true
+repository.workspace = true
 
 [lib]
 proc-macro = true

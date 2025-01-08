@@ -4,6 +4,7 @@ version = "0.0.0"
 license.workspace = true
 edition.workspace = true
 authors.workspace = true
+repository.workspace = true
 
 [dependencies]
 qualified_do_macro.workspace = true

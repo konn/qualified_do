@@ -2,8 +2,9 @@
 name = "qualified_do_proptest"
 autotests = true
 version = "0.0.0"
-license = "MIT"
-edition = "2021"
+license.workspace = true
+edition.workspace = true
+authors.workspace = true
 
 [dependencies]
 qualified_do.workspace = true

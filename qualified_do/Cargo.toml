@@ -5,6 +5,7 @@ license.workspace = true
 edition.workspace = true
 authors.workspace = true
 repository.workspace = true
+rust-version.workspace = true
 
 [dependencies]
 qualified_do_macro.workspace = true

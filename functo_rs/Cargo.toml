@@ -1,7 +1,12 @@
 [package]
 name = "functo_rs"
-version = "0.1.0"
-license = "MIT"
-edition = "2021"
+version = "0.0.0"
+description = "Control/Data/Unrestricted monad hierarchies for Rust to be used with qualified_do"
+license.workspace = true
+edition.workspace = true
+authors.workspace = true
+repository.workspace = true
+rust-version.workspace = true
 
 [dependencies]
+itertools.workspace = true

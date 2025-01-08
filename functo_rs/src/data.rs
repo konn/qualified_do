@@ -178,7 +178,7 @@ where
 
 impl<const N: usize> Pointed for ArrayFunctor<N> {
     fn pure<T: Clone>(t: T) -> [T; N] {
-        unsafe_collect_array(std::iter::repeat_n(t, N))
+        unsafe_collect_array(itertools::repeat_n(t, N))
     }
 }
 

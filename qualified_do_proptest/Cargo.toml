@@ -1,5 +1,6 @@
 [package]
 name = "qualified_do_proptest"
+description = "Proptest integration for qualified_do, enabling alternative sytnax for prop_compose!"
 autotests = true
 version = "0.0.0"
 license.workspace = true

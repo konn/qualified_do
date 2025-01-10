@@ -10,5 +10,8 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-qualified_do.workspace = true
 proptest.workspace = true
+
+[dependencies.qualified_do]
+path = "../qualified_do"
+version = "0.0"

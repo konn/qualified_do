@@ -9,9 +9,15 @@ repository.workspace = true
 rust-version.workspace = true
 
 [dependencies]
-qualified_do_macro.workspace = true
-functo_rs.workspace = true
 itertools.workspace = true
+
+[dependencies.qualified_do_macro]
+path = "../qualified_do_macro"
+version = "0.0"
+
+[dependencies.functo_rs]
+path = "../functo_rs"
+version = "0.0"
 
 [dev-dependencies]
 either.workspace = true

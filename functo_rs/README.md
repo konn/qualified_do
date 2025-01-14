@@ -10,13 +10,13 @@ If you want to use `do`-expressions in Rust, you can use [`qualified_do`][qdo] c
 
 This crate provides three distinct hierarchies of Functors:
 
-1. [Data Functors](https://docs.rs/functo_rs/0.0.0/functo_rs/data/index.html)
+1. [Data Functors](https://docs.rs/functo_rs/latest/functo_rs/data/index.html)
      + Container-like funcors and applicaives, which can contain multiple values but each consumed once.
      + There is no such things data `Monad`.
-2. [Control Functors](https://docs.rs/functo_rs/0.0.0/functo_rs/control/index.html)
+2. [Control Functors](https://docs.rs/functo_rs/latest/functo_rs/control/index.html)
      + Control-structure-like functors, which contains _at-most one_ value.
      + Contrary to Linear Haskell, `Option` and `Result` can fall into this class!
-3. [Nonlinear (or Unrestricted) Functors](https://docs.rs/functo_rs/0.0.0/functo_rs/nonlinear/index.html)
+3. [Nonlinear (or Unrestricted) Functors](https://docs.rs/functo_rs/latest/functo_rs/nonlinear/index.html)
      + What is called (ordinary) Monad in Haskell.
      + They can contain as many values, and all elements can be used for multiple times.
 

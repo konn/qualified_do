@@ -13,7 +13,7 @@ impl<G: Functor> AsData<G> {
     #[inline(always)]
     pub fn fmap<A, B, F>(f: F, fa: G::Container<A>) -> G::Container<B>
     where
-        F: Fn(A) -> B,
+        F: FnMut(A) -> B,
     {
         G::fmap(f, fa)
     }
@@ -24,7 +24,7 @@ pub trait Functor {
 
     fn fmap<A, B, F>(f: F, fa: Self::Container<A>) -> Self::Container<B>
     where
-        F: Fn(A) -> B;
+        F: FnMut(A) -> B;
 }
 
 impl Functor for Identity {
@@ -105,7 +105,7 @@ impl<const N: usize> Functor for ArrayFunctor<N> {
     #[inline(always)]
     fn fmap<A, B, F>(f: F, fa: Self::Container<A>) -> Self::Container<B>
     where
-        F: Fn(A) -> B,
+        F: FnMut(A) -> B,
     {
         fa.map(f)
     }

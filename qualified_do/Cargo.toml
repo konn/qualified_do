@@ -1,6 +1,6 @@
 [package]
 name = "qualified_do"
-version = "0.0.0"
+version.workspace = true
 description = "Composable _qualified_ do expressions for Rust, supporting monad- and applicative-like structures"
 license.workspace = true
 edition.workspace = true
@@ -13,11 +13,11 @@ itertools.workspace = true
 
 [dependencies.qualified_do_macro]
 path = "../qualified_do_macro"
-version = "0.0"
+version = "0.1"
 
 [dependencies.functo_rs]
 path = "../functo_rs"
-version = "0.0"
+version = "0.1"
 
 [dev-dependencies]
 either.workspace = true

@@ -7,7 +7,7 @@ pub struct AsNonlinear<F>(std::marker::PhantomData<F>);
 impl<F: Functor> AsNonlinear<F> {
     pub fn fmap<A, B, G>(f: G, fa: F::Container<A>) -> F::Container<B>
     where
-        G: Fn(A) -> B,
+        G: FnMut(A) -> B,
     {
         <F as Functor>::fmap(f, fa)
     }

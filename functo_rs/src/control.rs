@@ -52,6 +52,15 @@ impl<E> Functor for ResultFunctor<E> {
     }
 }
 
+impl Functor for Boxed {
+    fn fmap<A, B, F>(f: F, fa: Self::Container<A>) -> Self::Container<B>
+    where
+        F: FnOnce(A) -> B,
+    {
+        Box::new(f(*fa))
+    }
+}
+
 pub trait Pointed: Functor + data::Pointed {
     fn pure<A>(a: A) -> Self::Container<A>;
 }
@@ -81,6 +90,13 @@ impl<E> Pointed for ResultFunctor<E> {
     #[inline(always)]
     fn pure<A>(a: A) -> Result<A, E> {
         Ok(a)
+    }
+}
+
+impl Pointed for Boxed {
+    #[inline(always)]
+    fn pure<A>(a: A) -> Box<A> {
+        Box::new(a)
     }
 }
 
@@ -158,6 +174,19 @@ impl<E> Apply for ResultFunctor<E> {
     }
 }
 
+impl Apply for Boxed {
+    fn zip_with<A, B, C, F>(
+        f: F,
+        fa: Self::Container<A>,
+        fb: Self::Container<B>,
+    ) -> Self::Container<C>
+    where
+        F: FnOnce(A, B) -> C,
+    {
+        Box::new(f(*fa, *fb))
+    }
+}
+
 pub trait Monad: Apply + Pointed {
     fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
     where
@@ -211,6 +240,15 @@ impl<E> Monad for ResultFunctor<E> {
         F: FnOnce(A) -> Self::Container<B>,
     {
         fa.and_then(f)
+    }
+}
+
+impl Monad for Boxed {
+    fn and_then<A, B, F>(fa: Self::Container<A>, f: F) -> Self::Container<B>
+    where
+        F: FnOnce(A) -> Self::Container<B>,
+    {
+        f(*fa)
     }
 }
 

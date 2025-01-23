@@ -75,6 +75,17 @@ impl Functor for OptionFunctor {
     }
 }
 
+impl Functor for Boxed {
+    type Container<T> = Box<T>;
+
+    fn fmap<A, B, F>(mut f: F, fa: Self::Container<A>) -> Self::Container<B>
+    where
+        F: FnMut(A) -> B,
+    {
+        Box::new(f(*fa))
+    }
+}
+
 impl<E> Functor for ResultFunctor<E> {
     type Container<T> = Result<T, E>;
 
@@ -154,6 +165,13 @@ impl Pointed for V2 {
     #[inline(always)]
     fn pure<T: Clone>(t: T) -> (T, T) {
         (t.clone(), t)
+    }
+}
+
+impl Pointed for Boxed {
+    #[inline(always)]
+    fn pure<T: Clone>(t: T) -> Box<T> {
+        Box::new(t)
     }
 }
 
@@ -281,6 +299,20 @@ impl Apply for V2 {
         F: FnMut(A, B) -> C,
     {
         (f(fa.0, fb.0), f(fa.1, fb.1))
+    }
+}
+
+impl Apply for Boxed {
+    #[inline(always)]
+    fn zip_with<A, B, C, F>(
+        mut f: F,
+        fa: Self::Container<A>,
+        fb: Self::Container<B>,
+    ) -> Self::Container<C>
+    where
+        F: FnMut(A, B) -> C,
+    {
+        Box::new(f(*fa, *fb))
     }
 }
 

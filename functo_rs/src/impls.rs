@@ -10,6 +10,8 @@ pub enum ZipVec {}
 
 pub enum OptionFunctor {}
 
+pub enum Boxed {}
+
 pub struct ResultFunctor<E> {
     phantom: PhantomData<E>,
 }

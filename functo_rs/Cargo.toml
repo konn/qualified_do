@@ -2,6 +2,7 @@
 name = "functo_rs"
 version.workspace = true
 description = "Control/Data/Unrestricted monad hierarchies for Rust to be used with qualified_do"
+readme = "README.md"
 license.workspace = true
 edition.workspace = true
 authors.workspace = true

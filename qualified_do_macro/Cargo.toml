@@ -1,6 +1,6 @@
 [package]
 name = "qualified_do_macro"
-version = "0.0.0"
+version.workspace = true
 description = "Core macro implementation for qualified_do"
 autotests = false
 license.workspace = true

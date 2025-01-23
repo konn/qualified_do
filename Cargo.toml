@@ -8,6 +8,7 @@ members = [
 ]
 
 [workspace.package]
+version = "0.1.0"
 authors = ["Hiromi ISHII"]
 license = "MIT"
 edition = "2021"

@@ -2,7 +2,7 @@
 name = "qualified_do_proptest"
 description = "Proptest integration for qualified_do, enabling alternative sytnax for prop_compose!"
 autotests = true
-version = "0.0.0"
+version.workspace = true
 license.workspace = true
 edition.workspace = true
 authors.workspace = true
@@ -14,4 +14,4 @@ proptest.workspace = true
 
 [dependencies.qualified_do]
 path = "../qualified_do"
-version = "0.0"
+version = "0.1"

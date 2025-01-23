@@ -72,3 +72,12 @@ jobs:
     - uses: actions/checkout@v4
     - uses: taiki-e/install-action@cargo-hack
     - run: cargo hack check --rust-version --workspace --all-targets --ignore-private
+
+  semver-check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Check semver
+        uses: obi1kenobi/cargo-semver-checks-action@v2
